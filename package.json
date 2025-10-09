@@ -1,0 +1,29 @@
+{
+  "name": "unity-templates",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A CLI built with Bunli",
+  "author": "",
+  "bin": {
+    "unity-templates": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bunli build",
+    "test": "bun test",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bunli/core": "latest"
+  },
+  "devDependencies": {
+    "@bunli/test": "latest",
+    "@types/bun": "latest",
+    "bunli": "latest",
+    "typescript": "^5.0.0"
+  },
+  "bunli": {
+    "entry": "./src/index.ts",
+    "outDir": "./dist"
+  }
+}
