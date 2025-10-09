@@ -1,6 +1,6 @@
-# unity-templates
+# Unity templates
 
-A CLI built with Bunli
+A CLI tool for managing custom Unity templates, both project and script
 
 ## Installation
 
@@ -29,13 +29,9 @@ bun test
 ## Usage
 
 ```bash
-unity-templates hello --name World
+unity-templates sync
 ```
 
 ## Commands
 
-- `hello` - A simple greeting command
-
-## License
-
-MIT
+- `sync` - Add all the templates to installed Unity versions

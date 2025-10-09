@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 import { createCLI } from '@bunli/core'
-import { helloCommand } from './commands/hello.js'
+import { syncCommand } from './commands/sync.js'
 
 const cli = createCLI({
   name: 'unity-templates',
   version: '0.1.0',
-  description: 'A CLI built with Bunli'
+  description: 'A simple CLI tool for managing Unity templates (both project and script!)'
 })
 
-cli.command(helloCommand)
+cli.command(syncCommand)
 
 await cli.run()
