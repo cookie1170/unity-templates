@@ -14,12 +14,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@bunli/core": "latest"
+    "@bunli/core": "^0.1.0"
   },
   "devDependencies": {
     "@bunli/test": "latest",
     "@types/bun": "latest",
-    "bunli": "latest",
+    "bunli": "^0.1.1",
     "typescript": "^5.0.0"
   },
   "bunli": {
