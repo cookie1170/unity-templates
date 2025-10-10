@@ -1,24 +1,26 @@
-import { readdir } from "fs/promises";
-import { Config, getConfig } from "../config";
+import { Config, EditorVersion, getConfig, getEditorVersions } from "../config";
 import { syncProjects } from "./project";
-import ora from "ora";
 import { multiselect } from "@topcli/prompts";
+import { syncScriptTemplates as syncScripts } from "./script";
 
 export async function syncCommand() {
     const config: Config = await getConfig();
-    const versions: string[] = await readdir(`${config.editorPath}`);
+    const versions: EditorVersion[] = await getEditorVersions();
 
-    const selectedVersions: string[] =
+    const versionChoices: string[] = versions.map((version) => version.version);
+    const selectedVersions: EditorVersion[] = (
         versions.length <= 1
-            ? versions
+            ? versionChoices
             : await multiselect("Select versions to sync", {
-                  choices: versions,
-                  preSelectedChoices: versions,
-              });
+                  choices: versionChoices,
+                  preSelectedChoices: versionChoices,
+              })
+    ).map((version) => {
+        return { version: version, path: `${config.editorPath}/${version}` };
+    });
 
     for (const version of selectedVersions) {
-        const projectSpinner = ora(`"Syncing project templates for ${version}"`).start();
-        await syncProjects(`${config.editorPath}/${version}`, projectSpinner);
-        projectSpinner.succeed(`Synced project templates for ${version}`);
+        await syncProjects(version);
+        await syncScripts(version);
     }
 }
