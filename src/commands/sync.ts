@@ -1,13 +1,8 @@
-import { defineCommand, option } from "@bunli/core";
-import { z } from "zod";
-import { getConfig } from "../config";
+import { syncProjects } from "./project";
+import ora from "ora";
 
-export const syncCommand = defineCommand({
-    name: "sync",
-    description: "Add all the templates to installed Unity versions",
-    options: {},
-    handler: async ({ flags, colors }) => {
-        const config = await getConfig();
-        console.log(`Editor at ${config.editorPath}`);
-    },
-});
+export async function syncCommand() {
+    const spin = ora("Syncing project templates").start();
+    await syncProjects(spin);
+    spin.succeed("Done!");
+}

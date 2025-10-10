@@ -1,29 +1,27 @@
 {
-  "name": "unity-templates",
-  "version": "0.1.0",
-  "type": "module",
-  "description": "A CLI built with Bunli",
-  "author": "",
-  "bin": {
-    "unity-templates": "./dist/index.js"
-  },
-  "scripts": {
-    "dev": "bun run src/index.ts",
-    "build": "bunli build",
-    "test": "bun test",
-    "type-check": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@bunli/core": "^0.1.0"
-  },
-  "devDependencies": {
-    "@bunli/test": "latest",
-    "@types/bun": "latest",
-    "bunli": "^0.1.1",
-    "typescript": "^5.0.0"
-  },
-  "bunli": {
-    "entry": "./src/index.ts",
-    "outDir": "./dist"
-  }
+    "name": "unity-templates",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "A CLI tool for managing Unity script and project templates",
+    "author": "cookie1170",
+    "bin": {
+        "unity-templates": "./bin/run.js"
+    },
+    "scripts": {
+        "dev": "bun run src/index.ts",
+        "test": "bun test",
+        "type-check": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@topcli/prompts": "^2.4.1",
+        "commander": "^14.0.1",
+        "ora": "^9.0.0"
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "@types/node": "^18.19.129",
+        "@types/prompts": "^2.4.9",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.0.0"
+    }
 }

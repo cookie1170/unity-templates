@@ -1,28 +1,52 @@
 import { BunFile } from "bun";
-import { spinner } from "@bunli/utils";
 
-const configPath: string = `${process.env.HOME}/.config/unity-templates/config.json`;
+export const configBasePath: string = `${process.env.HOME}/.config/unity-templates`;
+const commonConfigPath: string = `${configBasePath}/config/common.json`;
+const projectTemplatesConfigPath: string = `${configBasePath}config/project-templates.json`;
 
 export type Config = {
     editorPath: string;
 };
 
+export type ProjectTemplatesConfig = {
+    projectsPath: string;
+};
+
 export async function getConfig(): Promise<Config> {
-    let configFile: BunFile = Bun.file(configPath);
+    return await getOrCreateConfigFile<Config>(
+        commonConfigPath,
+        getDefaultConfig
+    );
+}
 
-    if (!(await configFile.exists())) {
-        await configFile.write(getDefaultConfig());
-        configFile = Bun.file(configPath);
+export async function getProjectTemplatesConfig(): Promise<ProjectTemplatesConfig> {
+    return await getOrCreateConfigFile<ProjectTemplatesConfig>(
+        projectTemplatesConfigPath,
+        getDefaultProjectTemplatesConfig
+    );
+}
+
+async function getOrCreateConfigFile<T>(
+    path: string,
+    getDefault: Function
+): Promise<T> {
+    let file: BunFile = Bun.file(path);
+
+    if (!(await file.exists())) {
+        await file.write(getDefault());
+        file = Bun.file(path);
     }
-
-    const config: Config = await configFile.json();
 
     if (process.env.HOME === undefined)
         throw new Error("$HOME env variable is undefined!");
 
     const home: string = process.env.HOME;
 
-    config.editorPath = config.editorPath.replace("$HOME", home);
+    const text: string = await file
+        .text()
+        .then((s) => s.replaceAll("$HOME", home));
+
+    const config: T = JSON.parse(text);
 
     return config;
 }
@@ -30,6 +54,14 @@ export async function getConfig(): Promise<Config> {
 function getDefaultConfig(): string {
     const config: Config = {
         editorPath: "$HOME/Unity/Hub/Editor",
+    };
+
+    return JSON.stringify(config);
+}
+
+function getDefaultProjectTemplatesConfig(): string {
+    const config: ProjectTemplatesConfig = {
+        projectsPath: "$HOME/Projects/Unity",
     };
 
     return JSON.stringify(config);
