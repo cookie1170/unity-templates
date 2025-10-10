@@ -1,9 +1,12 @@
 import { configBasePath, getProjectTemplatesConfig, ProjectTemplatesConfig } from "../config";
 import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
 import ora, { Ora } from "ora";
-import { question, select, confirm } from "@topcli/prompts";
-import { $ } from "bun";
+import { question, select, confirm, required } from "@topcli/prompts";
+import { $, semver } from "bun";
 import { syncCommand } from "./sync";
+
+const semverRegex =
+    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
 
 const savedProjectTemplatesPath: string = `${configBasePath}/project-templates`;
 const editorProjectTemplatesPath: string = "Editor/Data/Resources/PackageManager/ProjectTemplates";
@@ -157,24 +160,31 @@ async function getTemplateInfo(selectedProject: string): Promise<ProjectTemplate
 
     const templateInfo: ProjectTemplateInfo = await Bun.file(templateInfoPath).json();
 
-    const semanticVersion: string[] = templateInfo.version.split(".");
-    let majorVersion: number = parseInt(semanticVersion[0] ?? "0");
-    let minorVersion: number = parseInt(semanticVersion[1] ?? "0");
-    let patchVersion: number = parseInt(semanticVersion[2] ?? "0");
+    try {
+        const semanticVersion: string[] = templateInfo.version.split(".");
+        let majorVersion: number = parseInt(semanticVersion[0] ?? "0");
+        let minorVersion: number = parseInt(semanticVersion[1] ?? "0");
+        let patchVersion: number = parseInt(semanticVersion[2] ?? "0");
+        const patchBump: string = `${majorVersion}.${minorVersion}.${patchVersion + 1}`;
+        const minorBump: string = `${majorVersion}.${minorVersion + 1}.0`;
+        const majorBump: string = `${majorVersion + 1}.0.0`;
+        const nothingBump: string = `${majorVersion}.${minorVersion}.${patchVersion}`;
 
-    const patchBump: string = `${majorVersion}.${minorVersion}.${patchVersion + 1}`;
-    const minorBump: string = `${majorVersion}.${minorVersion + 1}.0`;
-    const majorBump: string = `${majorVersion + 1}.0.0`;
-    const nothingBump: string = `${majorVersion}.${minorVersion}.${patchVersion}`;
+        const versionAction = await select("Select version action", {
+            choices: [
+                { value: patchBump, label: "Bump patch", description: patchBump },
+                { value: minorBump, label: "Bump minor", description: minorBump },
+                { value: majorBump, label: "Bump major", description: majorBump },
+                { value: "custom", label: "Custom", description: "Input a custom version" },
+                { value: nothingBump, label: "Do nothing", description: nothingBump },
+            ],
+        });
 
-    templateInfo.version = await select("Select version action", {
-        choices: [
-            { value: patchBump, label: "Bump patch", description: patchBump },
-            { value: minorBump, label: "Bump minor", description: minorBump },
-            { value: majorBump, label: "Bump major", description: majorBump },
-            { value: nothingBump, label: "Do nothing", description: nothingBump },
-        ],
-    });
+        templateInfo.version =
+            versionAction !== "custom" ? versionAction : await inputSemver("Input custom version");
+    } catch (e) {
+        templateInfo.version = "1.0.0";
+    }
 
     await Bun.write(templateInfoPath, JSON.stringify(templateInfo, null, 2));
 
@@ -182,15 +192,13 @@ async function getTemplateInfo(selectedProject: string): Promise<ProjectTemplate
 }
 
 async function createTemplateInfo(): Promise<string> {
-    const name: string = await question("Input template name");
+    const name: string = await question("Input template name", { validators: [required()] });
 
-    const displayName: string = await question("Input display name");
+    const displayName: string = await question("Input display name", { validators: [required()] });
 
-    const description: string = await question("Input description");
+    const description: string = await question("Input description", { validators: [required()] });
 
-    const version: string = await question("Input version", {
-        defaultValue: "1.0.0",
-    });
+    const version: string = await inputSemver("Input version");
 
     const templateInfo = {
         name: name,
@@ -200,4 +208,20 @@ async function createTemplateInfo(): Promise<string> {
     };
 
     return JSON.stringify(templateInfo, null, 2);
+}
+
+async function inputSemver(message: string): Promise<string> {
+    while (true) {
+        const value = await question(message, {
+            defaultValue: "1.0.0",
+        });
+
+        const result = value.search(semverRegex);
+        if (result === -1) {
+            console.log("Must be a valid semantic version!");
+            continue;
+        }
+
+        return value;
+    }
 }
