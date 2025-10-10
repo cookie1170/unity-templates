@@ -1,13 +1,7 @@
-import {
-    Config,
-    configBasePath,
-    getConfig,
-    getProjectTemplatesConfig,
-    ProjectTemplatesConfig,
-} from "../config";
+import { configBasePath, getProjectTemplatesConfig, ProjectTemplatesConfig } from "../config";
 import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
 import ora, { Ora } from "ora";
-import { Choice, question, select, confirm } from "@topcli/prompts";
+import { question, select, confirm } from "@topcli/prompts";
 import { $ } from "bun";
 import { syncCommand } from "./sync";
 
@@ -23,15 +17,8 @@ export async function projectCommand(): Promise<void> {
 
     const projectNames: string[] = await readdir(config.projectsPath);
 
-    const projects: Choice<string>[] = projectNames.map((project) => {
-        return {
-            value: project,
-            label: project,
-        };
-    });
-
     const selectedProject = await select("Select project", {
-        choices: projects,
+        choices: projectNames,
         autocomplete: true,
     });
 
@@ -182,10 +169,10 @@ async function getTemplateInfo(selectedProject: string): Promise<ProjectTemplate
 
     templateInfo.version = await select("Select version action", {
         choices: [
-            { value: nothingBump, label: "Do nothing", description: nothingBump },
             { value: patchBump, label: "Bump patch", description: patchBump },
             { value: minorBump, label: "Bump minor", description: minorBump },
             { value: majorBump, label: "Bump major", description: majorBump },
+            { value: nothingBump, label: "Do nothing", description: nothingBump },
         ],
     });
 
