@@ -1,4 +1,5 @@
 import { BunFile } from "bun";
+import { readdir } from "fs/promises";
 
 export const configBasePath: string = `${process.env.HOME}/.config/unity-templates`;
 const commonConfigPath: string = `${configBasePath}/config/common.json`;
@@ -13,10 +14,7 @@ export type ProjectTemplatesConfig = {
 };
 
 export async function getConfig(): Promise<Config> {
-    return await getOrCreateConfigFile<Config>(
-        commonConfigPath,
-        getDefaultConfig
-    );
+    return await getOrCreateConfigFile<Config>(commonConfigPath, getDefaultConfig);
 }
 
 export async function getProjectTemplatesConfig(): Promise<ProjectTemplatesConfig> {
@@ -26,10 +24,7 @@ export async function getProjectTemplatesConfig(): Promise<ProjectTemplatesConfi
     );
 }
 
-async function getOrCreateConfigFile<T>(
-    path: string,
-    getDefault: Function
-): Promise<T> {
+async function getOrCreateConfigFile<T>(path: string, getDefault: Function): Promise<T> {
     let file: BunFile = Bun.file(path);
 
     if (!(await file.exists())) {
@@ -37,14 +32,11 @@ async function getOrCreateConfigFile<T>(
         file = Bun.file(path);
     }
 
-    if (process.env.HOME === undefined)
-        throw new Error("$HOME env variable is undefined!");
+    if (process.env.HOME === undefined) throw new Error("$HOME env variable is undefined!");
 
     const home: string = process.env.HOME;
 
-    const text: string = await file
-        .text()
-        .then((s) => s.replaceAll("$HOME", home));
+    const text: string = await file.text().then((s) => s.replaceAll("$HOME", home));
 
     const config: T = JSON.parse(text);
 
@@ -66,3 +58,16 @@ function getDefaultProjectTemplatesConfig(): string {
 
     return JSON.stringify(config);
 }
+export async function getEditorVersions(): Promise<EditorVersion[]> {
+    const config: Config = await getConfig();
+    const versions: string[] = await readdir(`${config.editorPath}`);
+
+    return versions.map((version) => {
+        return { version: version, path: `${config.editorPath}/${version}` };
+    });
+}
+
+export type EditorVersion = {
+    version: string;
+    path: string;
+};

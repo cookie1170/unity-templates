@@ -2,8 +2,9 @@ import { configBasePath, getProjectTemplatesConfig, ProjectTemplatesConfig } fro
 import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
 import ora, { Ora } from "ora";
 import { question, select, confirm, required } from "@topcli/prompts";
-import { $, semver } from "bun";
+import { $ } from "bun";
 import { syncCommand } from "./sync";
+import { EditorVersion } from "../config";
 
 const semverRegex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
@@ -118,8 +119,10 @@ export async function projectCommand(): Promise<void> {
     }
 }
 
-export async function syncProjects(editorPath: string, spinner: Ora): Promise<void> {
-    const templatesPath: string = `${editorPath}/${editorProjectTemplatesPath}`;
+export async function syncProjects(version: EditorVersion): Promise<void> {
+    const spinner = ora(`"Syncing project templates for ${version.version}"`).start();
+
+    const templatesPath: string = `${version.path}/${editorProjectTemplatesPath}`;
     const existingTemplates: string[] = (await readdir(templatesPath)).filter((template) =>
         template.startsWith("com.unity.template.custom")
     );
@@ -140,6 +143,8 @@ export async function syncProjects(editorPath: string, spinner: Ora): Promise<vo
 
         await cp(`${savedProjectTemplatesPath}/${template}`, `${templatesPath}/${template}`);
     }
+
+    spinner.succeed(`Synced project templates for ${version.version}`);
 }
 
 type ProjectTemplateInfo = {
