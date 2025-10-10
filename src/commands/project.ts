@@ -131,43 +131,33 @@ export async function projectCommand(): Promise<void> {
     }
 }
 
-export async function syncProjects(spinner: Ora): Promise<void> {
-    const config: Config = await getConfig();
-    const versions: string[] = await readdir(`${config.editorPath}`);
-    for (const version of versions) {
-        spinner.text = `Starting version ${version}`;
+export async function syncProjects(
+    editorPath: string,
+    spinner: Ora
+): Promise<void> {
+    const templatesPath: string = `${editorPath}/${editorProjectTemplatesPath}`;
+    const existingTemplates: string[] = (await readdir(templatesPath)).filter(
+        (template) => template.startsWith("com.unity.template.custom")
+    );
 
-        const templatesPath: string = `${config.editorPath}/${version}/${editorProjectTemplatesPath}`;
-        const existingTemplates: string[] = (
-            await readdir(templatesPath)
-        ).filter((template) =>
-            template.startsWith("com.unity.template.custom")
+    spinner.text = "Removing existing custom templates";
+    for (const template of existingTemplates) {
+        const templatePath = `${templatesPath}/${template}`;
+        await rm(templatePath);
+    }
+
+    if (!(await exists(savedProjectTemplatesPath))) {
+        await mkdir(savedProjectTemplatesPath);
+    }
+
+    const customTemplates: string[] = await readdir(savedProjectTemplatesPath);
+    for (const template of customTemplates) {
+        spinner.text = `Copying ${template}`;
+
+        await cp(
+            `${savedProjectTemplatesPath}/${template}`,
+            `${templatesPath}/${template}`
         );
-
-        for (const template of existingTemplates) {
-            const templatePath = `${templatesPath}/${template}`;
-            spinner.text = `Removing ${templatePath.replace(
-                config.editorPath,
-                "$EDITOR"
-            )}`;
-            await rm(templatePath);
-        }
-
-        if (!(await exists(savedProjectTemplatesPath))) {
-            await mkdir(savedProjectTemplatesPath);
-        }
-
-        const customTemplates: string[] = await readdir(
-            savedProjectTemplatesPath
-        );
-        for (const template of customTemplates) {
-            spinner.text = `Copying ${template}`;
-
-            await cp(
-                `${savedProjectTemplatesPath}/${template}`,
-                `${templatesPath}/${template}`
-            );
-        }
     }
 }
 
