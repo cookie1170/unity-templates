@@ -12,8 +12,7 @@ import { $ } from "bun";
 import { syncCommand } from "./sync";
 
 const savedProjectTemplatesPath: string = `${configBasePath}/project-templates`;
-const editorProjectTemplatesPath: string =
-    "Editor/Data/Resources/PackageManager/ProjectTemplates";
+const editorProjectTemplatesPath: string = "Editor/Data/Resources/PackageManager/ProjectTemplates";
 
 export async function projectCommand(): Promise<void> {
     if (!(await exists(savedProjectTemplatesPath))) {
@@ -49,9 +48,7 @@ export async function projectCommand(): Promise<void> {
 
     const spin = ora("Reading dependencies").start();
 
-    const dependencies: any = await Bun.file(
-        `${project}/Packages/manifest.json`
-    )
+    const dependencies: any = await Bun.file(`${project}/Packages/manifest.json`)
         .json()
         .then((result) => result.dependencies);
 
@@ -126,18 +123,15 @@ export async function projectCommand(): Promise<void> {
     await rm(tempPath, { force: true, recursive: true });
     spin.succeed("Done! Open Unity Hub to see your new template");
 
-    if (await confirm("Sync templates?")) {
+    if (await confirm("Sync templates?", { initial: true })) {
         syncCommand();
     }
 }
 
-export async function syncProjects(
-    editorPath: string,
-    spinner: Ora
-): Promise<void> {
+export async function syncProjects(editorPath: string, spinner: Ora): Promise<void> {
     const templatesPath: string = `${editorPath}/${editorProjectTemplatesPath}`;
-    const existingTemplates: string[] = (await readdir(templatesPath)).filter(
-        (template) => template.startsWith("com.unity.template.custom")
+    const existingTemplates: string[] = (await readdir(templatesPath)).filter((template) =>
+        template.startsWith("com.unity.template.custom")
     );
 
     spinner.text = "Removing existing custom templates";
@@ -154,10 +148,7 @@ export async function syncProjects(
     for (const template of customTemplates) {
         spinner.text = `Copying ${template}`;
 
-        await cp(
-            `${savedProjectTemplatesPath}/${template}`,
-            `${templatesPath}/${template}`
-        );
+        await cp(`${savedProjectTemplatesPath}/${template}`, `${templatesPath}/${template}`);
     }
 }
 
@@ -168,9 +159,7 @@ type ProjectTemplateInfo = {
     version: string;
 };
 
-async function getTemplateInfo(
-    selectedProject: string
-): Promise<ProjectTemplateInfo> {
+async function getTemplateInfo(selectedProject: string): Promise<ProjectTemplateInfo> {
     const templateInfoPath = `${selectedProject}/template-info.json`;
 
     if (!(await Bun.file(templateInfoPath).exists())) {
@@ -179,50 +168,26 @@ async function getTemplateInfo(
         });
     }
 
-    const templateInfo: ProjectTemplateInfo = await Bun.file(
-        templateInfoPath
-    ).json();
+    const templateInfo: ProjectTemplateInfo = await Bun.file(templateInfoPath).json();
 
     const semanticVersion: string[] = templateInfo.version.split(".");
     let majorVersion: number = parseInt(semanticVersion[0] ?? "0");
     let minorVersion: number = parseInt(semanticVersion[1] ?? "0");
     let patchVersion: number = parseInt(semanticVersion[2] ?? "0");
 
-    const versionChoice = await select("Select version action", {
+    const patchBump: string = `${majorVersion}.${minorVersion}.${patchVersion + 1}`;
+    const minorBump: string = `${majorVersion}.${minorVersion + 1}.0`;
+    const majorBump: string = `${majorVersion + 1}.0.0`;
+    const nothingBump: string = `${majorVersion}.${minorVersion}.${patchVersion}`;
+
+    templateInfo.version = await select("Select version action", {
         choices: [
-            { value: "patch", label: "Bump patch" },
-            { value: "minor", label: "Bump minor" },
-            { value: "major", label: "Bump major" },
-            { value: "nothing", label: "Do nothing" },
+            { value: nothingBump, label: "Do nothing", description: nothingBump },
+            { value: patchBump, label: "Bump patch", description: patchBump },
+            { value: minorBump, label: "Bump minor", description: minorBump },
+            { value: majorBump, label: "Bump major", description: majorBump },
         ],
     });
-
-    switch (versionChoice) {
-        case "patch": {
-            patchVersion++;
-            break;
-        }
-
-        case "minor": {
-            minorVersion++;
-            patchVersion = 0;
-            break;
-        }
-        case "major": {
-            majorVersion++;
-            minorVersion = 0;
-            patchVersion = 0;
-            break;
-        }
-
-        case "nothing": {
-            break;
-        }
-    }
-
-    const updatedVersion = `${majorVersion}.${minorVersion}.${patchVersion}`;
-    console.log(`Updated version: ${updatedVersion}`);
-    templateInfo.version = updatedVersion;
 
     await Bun.write(templateInfoPath, JSON.stringify(templateInfo, null, 2));
 
