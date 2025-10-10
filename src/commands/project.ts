@@ -14,7 +14,6 @@ import { syncCommand } from "./sync";
 const savedProjectTemplatesPath: string = `${configBasePath}/project-templates`;
 const editorProjectTemplatesPath: string =
     "Editor/Data/Resources/PackageManager/ProjectTemplates";
-const templateBasePath: string = `${configBasePath}/project-template-base`;
 
 export async function projectCommand(): Promise<void> {
     if (!(await exists(savedProjectTemplatesPath))) {
@@ -61,22 +60,28 @@ export async function projectCommand(): Promise<void> {
     spin.text = `Making temporary path at ${tempPath}`;
     await mkdir(tempPath);
 
-    spin.text = `Copying template`;
-    await cp(templateBasePath, tempPath, {
-        recursive: true,
-    });
+    spin.text = "Creating package";
+    await mkdir(`${tempPath}/package`);
+    spin.text = "Creating ProjectData~";
+    await mkdir(`${tempPath}/package/ProjectData~`);
 
-    spin.text = "Editing package json";
-    let packageJson = await Bun.file(`${tempPath}/package/package.json`).json();
+    spin.text = "Creating package json";
+    const packageJsonFile = Bun.file(`${tempPath}/package/package.json`);
+    const packageJson = {
+        dependencies: {},
+        description: "",
+        displayName: "",
+        host: "hub",
+        name: "",
+        type: "template",
+        version: "1.0.0",
+    };
     packageJson.name = `com.unity.template.${templateInfo.name}`;
     packageJson.displayName = templateInfo.displayName;
     packageJson.description = templateInfo.description;
     packageJson.version = templateInfo.version;
     packageJson.dependencies = dependencies;
-    await Bun.write(
-        `${tempPath}/package/package.json`,
-        JSON.stringify(packageJson, null, 2)
-    );
+    await Bun.write(packageJsonFile, JSON.stringify(packageJson, null, 2));
 
     const projectData = `${tempPath}/package/ProjectData~`;
 
