@@ -5,6 +5,7 @@ import { $ } from "bun";
 import { getEditorVersions } from "../config";
 import ora from "ora";
 import { syncCommand } from "./sync";
+import { cp, rm, exists } from "fs/promises";
 
 const savedScriptTemplatesPath: string = `${configBasePath}/script-templates`;
 const editorScriptTemplatesPath: string = "Editor/Data/Resources/ScriptTemplates";
@@ -31,9 +32,23 @@ export async function scriptCommand() {
 
         await Bun.file(templatePath).write(templateText);
     }
+    const csExtensionReplaced = templatePath.replace(".txt", "");
+    try {
+        await cp(templatePath, csExtensionReplaced); // for syntax highligthing
+        await $`code -w ${csExtensionReplaced}`;
+        await cp(csExtensionReplaced, templatePath);
+    } catch {
+        try {
+            await $`xdg-open ${templatePath}`;
+        } catch {
+            console.log(`Failed to open the script template at path ${templatePath}`);
+        }
+    }
 
-    await $`xdg-open ${savedScriptTemplatesPath}/${chosenTemplate}`;
-    if (await confirm("Sync templates?", { initial: true })) {
+    const doSync = await confirm("Sync templates?", { initial: true });
+    if (await exists(csExtensionReplaced)) await rm(csExtensionReplaced);
+
+    if (doSync) {
         syncCommand();
     }
 }
