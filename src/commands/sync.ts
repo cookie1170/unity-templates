@@ -1,11 +1,12 @@
-import { Config, EditorVersion, getConfig, getEditorVersions } from "../config";
 import { syncProjects } from "./project";
 import { multiselect } from "@topcli/prompts";
 import { syncScripts } from "./script";
+import { getConfig } from "../config";
+import { EditorVersion, getEditorVersions } from "../misc";
 
 export async function syncCommand() {
-    const config: Config = await getConfig();
     const versions: EditorVersion[] = await getEditorVersions();
+    const editorPath: string = await getConfig("editorPath");
 
     const versionChoices: string[] = versions.map((version) => version.version);
     const selectedVersions: EditorVersion[] = (
@@ -16,7 +17,7 @@ export async function syncCommand() {
                   preSelectedChoices: versionChoices,
               })
     ).map((version) => {
-        return { version: version, path: `${config.editorPath}/${version}` };
+        return { version: version, path: `${editorPath}/${version}` };
     });
 
     for (const version of selectedVersions) {

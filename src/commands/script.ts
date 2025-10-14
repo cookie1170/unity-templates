@@ -1,13 +1,13 @@
 import { Choice, select, confirm } from "@topcli/prompts";
-import { configBasePath, EditorVersion } from "../config";
-import { scriptTemplates } from "./scriptTemplates";
+import { getConfigFolder } from "../config";
 import { $ } from "bun";
-import { getEditorVersions } from "../config";
 import ora from "ora";
 import { syncCommand } from "./sync";
 import { cp, rm, exists } from "node:fs/promises";
+import { scriptTemplates } from "../scriptTemplates";
+import { getEditorVersions, EditorVersion } from "../misc";
 
-const savedScriptTemplatesPath: string = `${configBasePath}/script-templates`;
+export const savedScriptTemplatesPath: string = `${getConfigFolder()}/script-templates`;
 const editorScriptTemplatesPath: string = "Editor/Data/Resources/ScriptTemplates";
 
 export async function scriptCommand() {

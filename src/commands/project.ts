@@ -1,15 +1,15 @@
-import { configBasePath, getProjectTemplatesConfig, ProjectTemplatesConfig } from "../config";
 import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
 import ora from "ora";
 import { question, select, confirm, required } from "@topcli/prompts";
 import { $ } from "bun";
 import { syncCommand } from "./sync";
-import { EditorVersion } from "../config";
+import { getConfig, getConfigFolder } from "../config";
+import { EditorVersion } from "../misc";
 
 const semverRegex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
 
-const savedProjectTemplatesPath: string = `${configBasePath}/project-templates`;
+export const savedProjectTemplatesPath: string = `${getConfigFolder()}/project-templates`;
 const editorProjectTemplatesPath: string = "Editor/Data/Resources/PackageManager/ProjectTemplates";
 
 export async function projectCommand(options: any): Promise<void> {
@@ -17,9 +17,7 @@ export async function projectCommand(options: any): Promise<void> {
         await mkdir(savedProjectTemplatesPath);
     }
 
-    const config: ProjectTemplatesConfig = await getProjectTemplatesConfig();
-
-    const projectNames: string[] = await readdir(config.projectsPath);
+    const projectNames: string[] = await readdir(await getConfig("projectsPath"));
 
     let project: string;
 
@@ -29,8 +27,8 @@ export async function projectCommand(options: any): Promise<void> {
             autocomplete: true,
         });
 
-        project = `${config.projectsPath}/${selectedProject}`;
-    } else project = options.project.replace("@PROJECTDIR", config.projectsPath);
+        project = `${await getConfig("projectsPath")}/${selectedProject}`;
+    } else project = options.project.replace("@PROJECTDIR", await getConfig("projectsPath"));
 
     const templateInfo: ProjectTemplateInfo = await getTemplateInfo(project);
 
@@ -47,7 +45,7 @@ export async function projectCommand(options: any): Promise<void> {
         .json()
         .then((result) => result.dependencies);
 
-    const tempPath = `${configBasePath}/tmp-${Date.now()}`;
+    const tempPath = `${getConfigFolder()}/tmp-${Date.now()}`;
 
     spin.text = `Making temporary path at ${tempPath}`;
     await mkdir(tempPath);

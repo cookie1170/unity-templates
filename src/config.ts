@@ -1,86 +1,57 @@
-import { question } from "@topcli/prompts";
-import { BunFile } from "bun";
-import { readdir } from "node:fs/promises";
+import Conf from "conf";
+import { confirm, question } from "@topcli/prompts";
+import { formatToPath } from "./misc";
 
-export const configBasePath: string = `${process.env.HOME}/.config/unity-templates`;
-const commonConfigPath: string = `${configBasePath}/config/common.json`;
-const projectTemplatesConfigPath: string = `${configBasePath}/config/project-templates.json`;
-
-export type Config = {
-    editorPath: string;
+const schema = {
+    editorPath: {
+        type: "string",
+    },
+    projectsPath: {
+        type: "string",
+    },
 };
 
-export type ProjectTemplatesConfig = {
-    projectsPath: string;
-};
+export const config = new Conf({
+    projectName: "unity-templates",
+    schema,
+});
 
-export async function getConfig(): Promise<Config> {
-    return await getOrCreateConfigFile<Config>(commonConfigPath, getDefaultConfig);
-}
+export async function initCommand() {
+    config.clear();
 
-export async function getProjectTemplatesConfig(): Promise<ProjectTemplatesConfig> {
-    return await getOrCreateConfigFile<ProjectTemplatesConfig>(
-        projectTemplatesConfigPath,
-        getDefaultProjectTemplatesConfig
+    const editorPath = formatToPath(
+        await question("Please input the path to the Unity editor", {
+            defaultValue: "~/Unity/Hub/Editor",
+        })
     );
+
+    const projectsPath = formatToPath(
+        await question("Please input your projects path", {
+            defaultValue: "~/Projects/Unity",
+        })
+    );
+
+    config.set("editorPath", editorPath);
+    config.set("projectsPath", projectsPath);
 }
 
-async function getOrCreateConfigFile<T>(
-    path: string,
-    getDefault: (() => T) | (() => Promise<T>)
-): Promise<T> {
-    let file: BunFile = Bun.file(path);
+export async function getConfig<T = string>(configPath: string): Promise<T> {
+    const configValue: string | undefined = config.get(configPath, undefined);
 
-    if (!(await file.exists())) {
-        const defaultValue: T = await getDefault();
-        await file.write(JSON.stringify(defaultValue));
-        file = Bun.file(path);
+    if (configValue === undefined) {
+        if (
+            await confirm("Looks like your config is missing. Would you like to set it up now?", {
+                initial: true,
+            })
+        ) {
+            await initCommand();
+        } else process.exit(1);
     }
 
-    if (process.env.HOME === undefined) throw new Error("$HOME env variable is undefined!");
-
-    const home: string = process.env.HOME;
-
-    const text: string = await file.text().then((s) => s.replaceAll("$HOME", home));
-
-    const config: T = JSON.parse(text);
-
-    return config;
+    return config.get(configPath);
 }
 
-async function getDefaultConfig(): Promise<Config> {
-    const editorPath: string = await question("Please specify your Unity editor path", {
-        defaultValue: "$HOME/Unity/Hub/Editor",
-    });
-
-    const config: Config = {
-        editorPath: editorPath,
-    };
-
-    return config;
+export function getConfigFolder(): string {
+    const configPath: string = config.path;
+    return configPath.replace("/config.json", "");
 }
-
-async function getDefaultProjectTemplatesConfig(): Promise<ProjectTemplatesConfig> {
-    const projectsPath: string = await question("Please specify your projects path", {
-        defaultValue: "$HOME/Projects/Unity",
-    });
-
-    const config: ProjectTemplatesConfig = {
-        projectsPath: projectsPath,
-    };
-
-    return config;
-}
-export async function getEditorVersions(): Promise<EditorVersion[]> {
-    const config: Config = await getConfig();
-    const versions: string[] = await readdir(`${config.editorPath}`);
-
-    return versions.map((version) => {
-        return { version: version, path: `${config.editorPath}/${version}` };
-    });
-}
-
-export type EditorVersion = {
-    version: string;
-    path: string;
-};
