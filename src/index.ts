@@ -15,7 +15,7 @@ const program = new Command();
 program
     .name("unity-templates")
     .description("A CLI tool for managing Unity script and project templates")
-    .version("0.6.0");
+    .version("0.7.0");
 
 program
     .command("sync")
@@ -29,6 +29,12 @@ program
         "-p --project <project>",
         "Specify a project path to use. Use @PROJECTDIR to access the project dir in the config"
     )
+    .option(
+        "--version-action <action>",
+        'Specify a version action. Use "nothing", "patch", "minor" or "major" or pass a semantic version'
+    )
+    .option("-s --sync", "Automatically accept the sync prompt")
+    .option("--no-sync", "Automatically decline the sync prompt")
     .action(projectCommand);
 
 program
@@ -47,10 +53,17 @@ const clear = program
 
 clear.command("all").description("Clears all of unity-templates's saved files").action(clearAllCommand);
 clear.command("config").description("Clears the config file").action(clearConfigCommand);
-clear.command("script").description("Clears all saved script templates").action(clearScriptTemplatesCommand);
+
+clear
+    .command("script")
+    .option("-a --all", "Clears all saved script templates instead of a selection")
+    .description("Clears saved script templates")
+    .action(clearScriptTemplatesCommand);
+
 clear
     .command("project")
-    .description("Clears all saved project templates")
+    .option("-a --all", "Clears all saved project templates instead of a selection")
+    .description("Clears saved project templates")
     .action(clearProjectTemplatesCommand);
 
 program.parse();

@@ -2,9 +2,9 @@ import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
 import ora from "ora";
 import { question, select, confirm, required } from "@topcli/prompts";
 import { $ } from "bun";
-import { syncCommand } from "./sync";
+import { syncCommand, syncPrompt } from "./sync";
 import { getConfig, getConfigFolder } from "../config";
-import { EditorVersion } from "../misc";
+import { EditorVersion, makeOrReaddir } from "../misc";
 
 const semverRegex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
@@ -30,7 +30,7 @@ export async function projectCommand(options: any): Promise<void> {
         project = `${await getConfig("projectsPath")}/${selectedProject}`;
     } else project = options.project.replace("@PROJECTDIR", await getConfig("projectsPath"));
 
-    const templateInfo: ProjectTemplateInfo = await getTemplateInfo(project);
+    const templateInfo: ProjectTemplateInfo = await getTemplateInfo(project, options.versionAction);
 
     const templateFile = Bun.file(
         `${savedProjectTemplatesPath}/com.unity.template.custom-${templateInfo.name}.tgz`
@@ -116,15 +116,14 @@ export async function projectCommand(options: any): Promise<void> {
     await rm(tempPath, { force: true, recursive: true });
     spin.succeed("Done! Open Unity Hub to see your new template");
 
-    if (await confirm("Sync templates?", { initial: true })) {
-        syncCommand();
-    }
+    await syncPrompt(options.sync);
 }
 
 export async function syncProjects(version: EditorVersion): Promise<void> {
     const spinner = ora(`"Syncing project templates for ${version.version}"`).start();
 
     const templatesPath: string = `${version.path}/${editorProjectTemplatesPath}`;
+
     const existingTemplates: string[] = (await readdir(templatesPath)).filter((template) =>
         template.startsWith("com.unity.template.custom")
     );
@@ -135,11 +134,7 @@ export async function syncProjects(version: EditorVersion): Promise<void> {
         await rm(templatePath);
     }
 
-    if (!(await exists(savedProjectTemplatesPath))) {
-        await mkdir(savedProjectTemplatesPath);
-    }
-
-    const customTemplates: string[] = await readdir(savedProjectTemplatesPath);
+    const customTemplates: string[] = await makeOrReaddir(savedProjectTemplatesPath);
     for (const template of customTemplates) {
         spinner.text = `Copying ${template}`;
 
@@ -156,7 +151,10 @@ type ProjectTemplateInfo = {
     version: string;
 };
 
-async function getTemplateInfo(selectedProject: string): Promise<ProjectTemplateInfo> {
+async function getTemplateInfo(
+    selectedProject: string,
+    versionAction: string | undefined
+): Promise<ProjectTemplateInfo> {
     const templateInfoPath = `${selectedProject}/template-info.json`;
 
     if (!(await Bun.file(templateInfoPath).exists())) {
@@ -166,31 +164,64 @@ async function getTemplateInfo(selectedProject: string): Promise<ProjectTemplate
     }
 
     const templateInfo: ProjectTemplateInfo = await Bun.file(templateInfoPath).json();
+    const semanticVersion: string[] = templateInfo.version.split(".");
 
-    try {
-        const semanticVersion: string[] = templateInfo.version.split(".");
-        let majorVersion: number = parseInt(semanticVersion[0] ?? "0");
-        let minorVersion: number = parseInt(semanticVersion[1] ?? "0");
-        let patchVersion: number = parseInt(semanticVersion[2] ?? "0");
-        const patchBump: string = `${majorVersion}.${minorVersion}.${patchVersion + 1}`;
-        const minorBump: string = `${majorVersion}.${minorVersion + 1}.0`;
-        const majorBump: string = `${majorVersion + 1}.0.0`;
-        const nothingBump: string = `${majorVersion}.${minorVersion}.${patchVersion}`;
+    let majorVersion: number = parseInt(semanticVersion[0] ?? "0");
+    let minorVersion: number = parseInt(semanticVersion[1] ?? "0");
+    let patchVersion: number = parseInt(semanticVersion[2] ?? "0");
 
-        const versionAction = await select("Select version action", {
-            choices: [
-                { value: patchBump, label: "Bump patch", description: patchBump },
-                { value: minorBump, label: "Bump minor", description: minorBump },
-                { value: majorBump, label: "Bump major", description: majorBump },
-                { value: "custom", label: "Custom", description: "Input a custom version" },
-                { value: nothingBump, label: "Do nothing", description: nothingBump },
-            ],
-        });
+    const patchBump: string = `${majorVersion}.${minorVersion}.${patchVersion + 1}`;
+    const minorBump: string = `${majorVersion}.${minorVersion + 1}.0`;
+    const majorBump: string = `${majorVersion + 1}.0.0`;
+    const nothingBump: string = `${majorVersion}.${minorVersion}.${patchVersion}`;
 
-        templateInfo.version =
-            versionAction !== "custom" ? versionAction : await inputSemver("Input custom version");
-    } catch (e) {
-        templateInfo.version = "1.0.0";
+    if (versionAction === undefined) {
+        try {
+            const versionAction = await select("Select version action", {
+                choices: [
+                    { value: patchBump, label: "Bump patch", description: patchBump },
+                    { value: minorBump, label: "Bump minor", description: minorBump },
+                    { value: majorBump, label: "Bump major", description: majorBump },
+                    { value: "custom", label: "Custom", description: "Input a custom version" },
+                    { value: nothingBump, label: "Do nothing", description: nothingBump },
+                ],
+            });
+
+            templateInfo.version =
+                versionAction !== "custom" ? versionAction : await inputSemver("Input custom version");
+        } catch (e) {
+            templateInfo.version = "1.0.0";
+        }
+    } else {
+        switch (versionAction) {
+            case "patch": {
+                templateInfo.version = patchBump;
+                break;
+            }
+
+            case "minor": {
+                templateInfo.version = minorBump;
+                break;
+            }
+
+            case "major": {
+                templateInfo.version = majorBump;
+                break;
+            }
+
+            case "nothing": {
+                templateInfo.version = nothingBump;
+                break;
+            }
+
+            default: {
+                if (versionAction.search(semverRegex) === -1) {
+                    throw new Error(`Invalid semantic version ${versionAction}!`);
+                }
+
+                templateInfo.version = versionAction;
+            }
+        }
     }
 
     await Bun.write(templateInfoPath, JSON.stringify(templateInfo, null, 2));

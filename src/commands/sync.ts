@@ -1,5 +1,5 @@
 import { syncProjects } from "./project";
-import { multiselect } from "@topcli/prompts";
+import { multiselect, confirm } from "@topcli/prompts";
 import { syncScripts } from "./script";
 import { getConfig } from "../config";
 import { EditorVersion, getEditorVersions } from "../misc";
@@ -24,4 +24,13 @@ export async function syncCommand() {
         await syncProjects(version);
         await syncScripts(version);
     }
+}
+
+export async function syncPrompt(override: boolean | undefined = undefined) {
+    if (override === undefined) {
+        if (await confirm("Sync now?", { initial: true })) syncCommand();
+        return;
+    }
+
+    if (override) syncCommand();
 }

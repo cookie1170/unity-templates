@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { mkdir, readdir } from "node:fs/promises";
 import { getConfig } from "./config";
 
 export function formatPath(path: string): string {
@@ -24,6 +24,11 @@ export async function getEditorVersions(): Promise<EditorVersion[]> {
     return versions.map((version) => {
         return { version: version, path: `${editorPath}/${version}` };
     });
+}
+
+export async function makeOrReaddir(dir: string): Promise<string[]> {
+    await mkdir(dir, { recursive: true });
+    return await readdir(dir);
 }
 
 export type EditorVersion = {

@@ -2,7 +2,7 @@ import { Choice, select, confirm } from "@topcli/prompts";
 import { getConfigFolder } from "../config";
 import { $ } from "bun";
 import ora from "ora";
-import { syncCommand } from "./sync";
+import { syncCommand, syncPrompt } from "./sync";
 import { cp, rm, exists } from "node:fs/promises";
 import open from "open";
 import { scriptTemplates } from "../scriptTemplates";
@@ -36,11 +36,7 @@ export async function scriptCommand() {
 
     await open(templatePath, { wait: true });
 
-    const doSync = await confirm("Sync templates?", { initial: true });
-
-    if (doSync) {
-        syncCommand();
-    }
+    await syncPrompt();
 }
 
 export async function syncScripts(version: EditorVersion) {
