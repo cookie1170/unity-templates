@@ -1,7 +1,7 @@
 import { Config, EditorVersion, getConfig, getEditorVersions } from "../config";
 import { syncProjects } from "./project";
 import { multiselect } from "@topcli/prompts";
-import { syncScriptTemplates as syncScripts } from "./script";
+import { syncScripts } from "./script";
 
 export async function syncCommand() {
     const config: Config = await getConfig();

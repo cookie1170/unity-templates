@@ -5,7 +5,7 @@ import { $ } from "bun";
 import { getEditorVersions } from "../config";
 import ora from "ora";
 import { syncCommand } from "./sync";
-import { cp, rm, exists } from "fs/promises";
+import { cp, rm, exists } from "node:fs/promises";
 
 const savedScriptTemplatesPath: string = `${configBasePath}/script-templates`;
 const editorScriptTemplatesPath: string = "Editor/Data/Resources/ScriptTemplates";
@@ -53,7 +53,7 @@ export async function scriptCommand() {
     }
 }
 
-export async function syncScriptTemplates(version: EditorVersion) {
+export async function syncScripts(version: EditorVersion) {
     const spinner = ora(`Syncing script templates for version ${version.version}`);
 
     for (const template of scriptTemplates) {

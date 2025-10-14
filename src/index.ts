@@ -1,7 +1,9 @@
-import { program } from "commander";
+import { Command } from "commander";
 import { syncCommand } from "./commands/sync";
 import { projectCommand } from "./commands/project";
 import { scriptCommand } from "./commands/script";
+
+const program = new Command();
 
 program
     .name("unity-templates")
@@ -16,6 +18,10 @@ program
 program
     .command("project")
     .description("Make or update a template from a Unity project")
+    .option(
+        "-p --project <project>",
+        "Specify a project path to use. Use @PROJECTDIR to access the project dir in the config"
+    )
     .action(projectCommand);
 
 program

@@ -1,6 +1,6 @@
 import { configBasePath, getProjectTemplatesConfig, ProjectTemplatesConfig } from "../config";
 import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
-import ora, { Ora } from "ora";
+import ora from "ora";
 import { question, select, confirm, required } from "@topcli/prompts";
 import { $ } from "bun";
 import { syncCommand } from "./sync";
@@ -12,7 +12,7 @@ const semverRegex =
 const savedProjectTemplatesPath: string = `${configBasePath}/project-templates`;
 const editorProjectTemplatesPath: string = "Editor/Data/Resources/PackageManager/ProjectTemplates";
 
-export async function projectCommand(): Promise<void> {
+export async function projectCommand(options: any): Promise<void> {
     if (!(await exists(savedProjectTemplatesPath))) {
         await mkdir(savedProjectTemplatesPath);
     }
@@ -21,12 +21,16 @@ export async function projectCommand(): Promise<void> {
 
     const projectNames: string[] = await readdir(config.projectsPath);
 
-    const selectedProject = await select("Select project", {
-        choices: projectNames,
-        autocomplete: true,
-    });
+    let project: string;
 
-    const project: string = `${config.projectsPath}/${selectedProject}`;
+    if (options.project === undefined) {
+        const selectedProject = await select("Select project", {
+            choices: projectNames,
+            autocomplete: true,
+        });
+
+        project = `${config.projectsPath}/${selectedProject}`;
+    } else project = options.project.replace("@PROJECTDIR", config.projectsPath);
 
     const templateInfo: ProjectTemplateInfo = await getTemplateInfo(project);
 

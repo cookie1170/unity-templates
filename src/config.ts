@@ -1,9 +1,10 @@
+import { question } from "@topcli/prompts";
 import { BunFile } from "bun";
-import { readdir } from "fs/promises";
+import { readdir } from "node:fs/promises";
 
 export const configBasePath: string = `${process.env.HOME}/.config/unity-templates`;
 const commonConfigPath: string = `${configBasePath}/config/common.json`;
-const projectTemplatesConfigPath: string = `${configBasePath}config/project-templates.json`;
+const projectTemplatesConfigPath: string = `${configBasePath}/config/project-templates.json`;
 
 export type Config = {
     editorPath: string;
@@ -24,11 +25,15 @@ export async function getProjectTemplatesConfig(): Promise<ProjectTemplatesConfi
     );
 }
 
-async function getOrCreateConfigFile<T>(path: string, getDefault: Function): Promise<T> {
+async function getOrCreateConfigFile<T>(
+    path: string,
+    getDefault: (() => T) | (() => Promise<T>)
+): Promise<T> {
     let file: BunFile = Bun.file(path);
 
     if (!(await file.exists())) {
-        await file.write(getDefault());
+        const defaultValue: T = await getDefault();
+        await file.write(JSON.stringify(defaultValue));
         file = Bun.file(path);
     }
 
@@ -43,20 +48,28 @@ async function getOrCreateConfigFile<T>(path: string, getDefault: Function): Pro
     return config;
 }
 
-function getDefaultConfig(): string {
+async function getDefaultConfig(): Promise<Config> {
+    const editorPath: string = await question("Please specify your Unity editor path", {
+        defaultValue: "$HOME/Unity/Hub/Editor",
+    });
+
     const config: Config = {
-        editorPath: "$HOME/Unity/Hub/Editor",
+        editorPath: editorPath,
     };
 
-    return JSON.stringify(config);
+    return config;
 }
 
-function getDefaultProjectTemplatesConfig(): string {
+async function getDefaultProjectTemplatesConfig(): Promise<ProjectTemplatesConfig> {
+    const projectsPath: string = await question("Please specify your projects path", {
+        defaultValue: "$HOME/Projects/Unity",
+    });
+
     const config: ProjectTemplatesConfig = {
-        projectsPath: "$HOME/Projects/Unity",
+        projectsPath: projectsPath,
     };
 
-    return JSON.stringify(config);
+    return config;
 }
 export async function getEditorVersions(): Promise<EditorVersion[]> {
     const config: Config = await getConfig();
