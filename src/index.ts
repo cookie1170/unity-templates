@@ -9,13 +9,14 @@ import {
     clearProjectTemplatesCommand,
     clearScriptTemplatesCommand,
 } from "./commands/clear";
+import packageJson from "../package.json";
 
 const program = new Command();
 
 program
     .name("unity-templates")
     .description("A CLI tool for managing Unity script and project templates")
-    .version("0.8.0");
+    .version(packageJson.version);
 
 program
     .command("sync")

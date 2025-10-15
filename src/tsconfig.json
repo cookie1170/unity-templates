@@ -7,14 +7,14 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
+        "composite": true,
         "resolveJsonModule": true,
         "declaration": true,
         "declarationMap": true,
-        "composite": true,
-        "outDir": ".",
+        "outDir": "../dist",
         "rootDir": ".",
         "types": ["bun-types"]
     },
-    "files": ["package.json"],
-    "references": [{ "path": "./src" }]
+    "exclude": ["node_modules", "dist", "test/**/*"],
+    "references": [{ "path": "../" }]
 }
