@@ -4,7 +4,7 @@ import { question, select, required } from "@topcli/prompts";
 import { $ } from "bun";
 import { syncPrompt } from "./sync";
 import { getConfig, getConfigFolder } from "../config";
-import { EditorVersion, makeOrReaddir } from "../misc";
+import { clearTemporary, EditorVersion, makeOrReaddir, makeTemporary } from "../misc";
 
 const semverRegex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
@@ -45,10 +45,7 @@ export async function projectCommand(options: any): Promise<void> {
         .json()
         .then((result) => result.dependencies);
 
-    const tempPath = `${getConfigFolder()}/tmp-${Date.now()}`;
-
-    spin.text = `Making temporary path at ${tempPath}`;
-    await mkdir(tempPath);
+    const tempPath = await makeTemporary(spin);
 
     spin.text = "Creating package";
     await mkdir(`${tempPath}/package`);
@@ -112,8 +109,7 @@ export async function projectCommand(options: any): Promise<void> {
         force: true,
     });
 
-    spin.text = "Removing temporary directory";
-    await rm(tempPath, { force: true, recursive: true });
+    await clearTemporary(spin);
     spin.succeed("Done! Open Unity Hub to see your new template");
 
     await syncPrompt(options.sync);
