@@ -6,6 +6,7 @@ import { savedScriptTemplatesPath } from "./script";
 import { savedProjectTemplatesPath } from "./project";
 import { Choice, multiselect } from "@topcli/prompts";
 import { syncPrompt } from "./sync";
+import { getTemplateFromValue } from "../scriptTemplates";
 
 export async function clearAllCommand() {
     const configFolder = getConfigFolder();
@@ -34,15 +35,51 @@ export async function clearConfigCommand() {
     await rm(configFile);
 }
 
-export async function clearScriptTemplatesCommand() {
-    const spinner = ora(`Removing ${formatPath(savedScriptTemplatesPath)}`).start();
+export async function clearScriptTemplatesCommand(options: any) {
+    if (options.all) {
+        const spinner = ora(`Removing ${formatPath(savedScriptTemplatesPath)}`).start();
 
-    if (!(await exists(savedScriptTemplatesPath))) {
-        spinner.fail("Script templates path not found");
-        process.exit(1);
+        if (!(await exists(savedScriptTemplatesPath))) {
+            spinner.fail("script templates path not found");
+            process.exit(1);
+        }
+
+        await rm(savedScriptTemplatesPath, { recursive: true, force: true });
+        await succeed(spinner);
+        return;
     }
 
-    await rm(savedScriptTemplatesPath, { recursive: true, force: true });
+    const templates = await makeOrReaddir(savedScriptTemplatesPath);
+
+    if (templates.length <= 0) {
+        console.log("No script templates found!");
+        process.exit(0);
+    }
+
+    const templateChoices: Choice<string>[] = templates.map((template) => {
+        return {
+            value: template,
+            label: getTemplateFromValue(template).displayName,
+        };
+    });
+
+    const selectedTemplates = await multiselect("Select script templates to remove", {
+        autocomplete: true,
+        choices: templateChoices,
+    });
+
+    const spinner = ora("Removing templates").start();
+    for (let template of selectedTemplates) {
+        spinner.text = `Removing template ${getTemplateFromValue(template).displayName}`;
+        await rm(`${savedScriptTemplatesPath}/${template}`);
+    }
+
+    await succeed(spinner);
+
+    async function succeed(spin: Ora) {
+        spin.succeed("Done!");
+        await syncPrompt();
+    }
 }
 
 export async function clearProjectTemplatesCommand(options: any) {

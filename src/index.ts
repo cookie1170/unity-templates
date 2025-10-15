@@ -15,7 +15,7 @@ const program = new Command();
 program
     .name("unity-templates")
     .description("A CLI tool for managing Unity script and project templates")
-    .version("0.7.0");
+    .version("0.8.0");
 
 program
     .command("sync")

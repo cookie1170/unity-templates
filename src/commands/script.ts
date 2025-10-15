@@ -1,12 +1,10 @@
-import { Choice, select, confirm } from "@topcli/prompts";
+import { Choice, multiselect, confirm, required } from "@topcli/prompts";
 import { getConfigFolder } from "../config";
-import { $ } from "bun";
 import ora from "ora";
-import { syncCommand, syncPrompt } from "./sync";
-import { cp, rm, exists } from "node:fs/promises";
+import { syncPrompt } from "./sync";
 import open from "open";
 import { scriptTemplates } from "../scriptTemplates";
-import { getEditorVersions, EditorVersion } from "../misc";
+import { EditorVersion } from "../misc";
 
 export const savedScriptTemplatesPath: string = `${getConfigFolder()}/script-templates`;
 const editorScriptTemplatesPath: string = "Editor/Data/Resources/ScriptTemplates";
@@ -19,22 +17,31 @@ export async function scriptCommand() {
         };
     });
 
-    const chosenTemplate: string = await select("Select template to edit", {
+    const chosenTemplates: string[] = await multiselect("Select templates to edit", {
         choices: choices,
         autocomplete: true,
+        validators: [required()],
     });
 
-    const templatePath: string = `${savedScriptTemplatesPath}/${chosenTemplate}`;
-    const templateFile = Bun.file(templatePath);
-    if (!(await templateFile.exists())) {
-        const templateText = await Bun.file(
-            `${(await getEditorVersions())[0].path}/${editorScriptTemplatesPath}/${chosenTemplate}`
-        ).text();
+    for (let i = 0; i < chosenTemplates.length; i++) {
+        const chosenTemplate = chosenTemplates[i];
 
-        await Bun.file(templatePath).write(templateText);
+        const templatePath: string = `${savedScriptTemplatesPath}/${chosenTemplate}`;
+        const templateFile = Bun.file(templatePath);
+        if (!(await templateFile.exists())) {
+            const templateIndex = scriptTemplates.findIndex((template) => template.value == chosenTemplate);
+            const templateText = scriptTemplates[templateIndex].defaultValue;
+
+            await Bun.file(templatePath).write(templateText);
+        }
+
+        await open(templatePath, { wait: true });
+        if (i < chosenTemplates.length - 1) {
+            if (await confirm("Continue?", { initial: true })) {
+                continue;
+            } else break;
+        }
     }
-
-    await open(templatePath, { wait: true });
 
     await syncPrompt();
 }
@@ -43,10 +50,13 @@ export async function syncScripts(version: EditorVersion) {
     const spinner = ora(`Syncing script templates for version ${version.version}`);
 
     for (const template of scriptTemplates) {
+        const editorTemplateFile = Bun.file(`${version.path}/${editorScriptTemplatesPath}/${template.value}`);
+        spinner.text = `Resetting template ${template.displayName}`;
+        await Bun.write(editorTemplateFile, template.defaultValue);
+
         const savedTemplateFile = Bun.file(`${savedScriptTemplatesPath}/${template.value}`);
         if (!(await savedTemplateFile.exists())) continue;
 
-        const editorTemplateFile = Bun.file(`${version.path}/${editorScriptTemplatesPath}/${template.value}`);
         spinner.text = `Copying template ${template.displayName}`;
         await Bun.write(editorTemplateFile, await savedTemplateFile.text());
     }

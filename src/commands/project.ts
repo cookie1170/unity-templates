@@ -1,8 +1,8 @@
 import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
 import ora from "ora";
-import { question, select, confirm, required } from "@topcli/prompts";
+import { question, select, required } from "@topcli/prompts";
 import { $ } from "bun";
-import { syncCommand, syncPrompt } from "./sync";
+import { syncPrompt } from "./sync";
 import { getConfig, getConfigFolder } from "../config";
 import { EditorVersion, makeOrReaddir } from "../misc";
 
