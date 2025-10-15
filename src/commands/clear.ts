@@ -1,6 +1,6 @@
 import ora, { Ora } from "ora";
-import { getConfigFolder } from "../config";
-import { exists, rm } from "node:fs/promises";
+import { config, getConfigFolder } from "../config";
+import { exists, readdir, rm } from "node:fs/promises";
 import { formatPath, makeOrReaddir } from "../misc";
 import { savedScriptTemplatesPath } from "./script";
 import { savedProjectTemplatesPath } from "./project";
@@ -11,29 +11,21 @@ import path from "node:path";
 
 export async function clearAllCommand() {
     const configFolder = getConfigFolder();
-    const spinner = ora(`Removing ${formatPath(configFolder)}`).start();
 
     if (!(await exists(configFolder))) {
-        spinner.fail("Config folder not found");
+        console.log("Config folder not found");
         process.exit(1);
     }
 
-    await rm(configFolder, { recursive: true, force: true });
-    spinner.succeed("Cleared config!");
+    await clearScriptTemplatesCommand({ all: true });
+    await clearProjectTemplatesCommand({ all: true });
+
+    await syncPrompt();
+    clearConfigCommand();
 }
 
-export async function clearConfigCommand() {
-    const configFolder = getConfigFolder();
-    const configFile = path.join(configFolder, "config.json");
-
-    const spinner = ora(`Removing ${formatPath(configFile)}`).start();
-
-    if (!(await exists(configFile))) {
-        spinner.fail("Config file not found");
-        process.exit(1);
-    }
-
-    await rm(configFile);
+export function clearConfigCommand() {
+    config.clear();
 }
 
 export async function clearScriptTemplatesCommand(options: any) {
@@ -41,12 +33,14 @@ export async function clearScriptTemplatesCommand(options: any) {
         const spinner = ora(`Removing ${formatPath(savedScriptTemplatesPath)}`).start();
 
         if (!(await exists(savedScriptTemplatesPath))) {
-            spinner.fail("script templates path not found");
-            process.exit(1);
+            spinner.fail("No script templates present");
+            return;
         }
 
         await rm(savedScriptTemplatesPath, { recursive: true, force: true });
-        await succeed(spinner);
+
+        spinner.succeed("Cleared all script templates!");
+        await syncPrompt();
         return;
     }
 
@@ -54,7 +48,7 @@ export async function clearScriptTemplatesCommand(options: any) {
 
     if (templates.length <= 0) {
         console.log("No script templates found!");
-        process.exit(0);
+        return;
     }
 
     const templateChoices: Choice<string>[] = templates.map((template) => {
@@ -75,12 +69,8 @@ export async function clearScriptTemplatesCommand(options: any) {
         await rm(path.join(savedScriptTemplatesPath, template));
     }
 
-    await succeed(spinner);
-
-    async function succeed(spin: Ora) {
-        spin.succeed("Done!");
-        await syncPrompt();
-    }
+    spinner.succeed("Done!");
+    await syncPrompt();
 }
 
 export async function clearProjectTemplatesCommand(options: any) {
@@ -88,12 +78,14 @@ export async function clearProjectTemplatesCommand(options: any) {
         const spinner = ora(`Removing ${formatPath(savedProjectTemplatesPath)}`).start();
 
         if (!(await exists(savedProjectTemplatesPath))) {
-            spinner.fail("Project templates path not found");
-            process.exit(1);
+            spinner.fail("No project templates present");
+            return;
         }
 
         await rm(savedProjectTemplatesPath, { recursive: true, force: true });
-        await succeed(spinner);
+
+        spinner.succeed("Cleared all project templates!");
+        await syncPrompt();
         return;
     }
 
@@ -122,12 +114,8 @@ export async function clearProjectTemplatesCommand(options: any) {
         await rm(path.join(savedProjectTemplatesPath, template));
     }
 
-    await succeed(spinner);
-
-    async function succeed(spin: Ora) {
-        spin.succeed("Done!");
-        await syncPrompt();
-    }
+    spinner.succeed("Done!");
+    await syncPrompt();
 }
 
 function formatTemplate(template: string): string {

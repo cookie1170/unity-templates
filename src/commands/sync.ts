@@ -29,9 +29,9 @@ export async function syncCommand() {
 
 export async function syncPrompt(override: boolean | undefined = undefined) {
     if (override === undefined) {
-        if (await confirm("Sync now?", { initial: true })) syncCommand();
+        if (await confirm("Sync now?", { initial: true })) await syncCommand();
         return;
     }
 
-    if (override) syncCommand();
+    if (override) await syncCommand();
 }

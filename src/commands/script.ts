@@ -75,6 +75,8 @@ export async function scriptCommand() {
 export async function syncScripts(version: EditorVersion) {
     const spinner = ora(`Syncing script templates for version ${version.version}`);
 
+    let templateCount: number = 0;
+
     for (const template of scriptTemplates) {
         const editorTemplateFile = Bun.file(
             path.join(version.path, editorScriptTemplatesPath, template.value)
@@ -87,7 +89,12 @@ export async function syncScripts(version: EditorVersion) {
 
         spinner.text = `Copying template ${template.displayName}`;
         await Bun.write(editorTemplateFile, await savedTemplateFile.text());
+        templateCount++;
     }
 
-    spinner.succeed(`Synced script templates for version ${version.version}`);
+    spinner.succeed(
+        `Synced ${templateCount} script template${templateCount != 1 ? "s" : ""} for version ${
+            version.version
+        }`
+    );
 }

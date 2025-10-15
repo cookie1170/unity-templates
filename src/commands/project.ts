@@ -142,13 +142,18 @@ export async function syncProjects(version: EditorVersion): Promise<void> {
     }
 
     const customTemplates: string[] = await makeOrReaddir(savedProjectTemplatesPath);
+
     for (const template of customTemplates) {
         spinner.text = `Copying ${template}`;
 
         await cp(path.join(savedProjectTemplatesPath, template), path.join(templatesPath, template));
     }
 
-    spinner.succeed(`Synced project templates for ${version.version}`);
+    spinner.succeed(
+        `Synced ${customTemplates.length} project template${customTemplates.length != 1 ? "s" : ""} for ${
+            version.version
+        }`
+    );
 }
 
 type ProjectTemplateInfo = {
