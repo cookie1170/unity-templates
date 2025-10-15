@@ -5,12 +5,19 @@ import { $ } from "bun";
 import { syncPrompt } from "./sync";
 import { getConfig, getConfigFolder } from "../config";
 import { clearTemporary, EditorVersion, makeOrReaddir, makeTemporary } from "../misc";
+import path from "node:path";
 
 const semverRegex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
 
-export const savedProjectTemplatesPath: string = `${getConfigFolder()}/project-templates`;
-const editorProjectTemplatesPath: string = "Editor/Data/Resources/PackageManager/ProjectTemplates";
+export const savedProjectTemplatesPath: string = path.join(getConfigFolder(), "project-templates");
+const editorProjectTemplatesPath: string = path.join(
+    "Editor",
+    "Data",
+    "Resources",
+    "PackageManager",
+    "ProjectTemplates"
+);
 
 export async function projectCommand(options: any): Promise<void> {
     if (!(await exists(savedProjectTemplatesPath))) {
@@ -27,13 +34,13 @@ export async function projectCommand(options: any): Promise<void> {
             autocomplete: true,
         });
 
-        project = `${await getConfig("projectsPath")}/${selectedProject}`;
+        project = path.join(await getConfig("projectsPath"), selectedProject);
     } else project = options.project.replace("@PROJECTDIR", await getConfig("projectsPath"));
 
     const templateInfo: ProjectTemplateInfo = await getTemplateInfo(project, options.versionAction);
 
     const templateFile = Bun.file(
-        `${savedProjectTemplatesPath}/com.unity.template.custom-${templateInfo.name}.tgz`
+        path.join(savedProjectTemplatesPath, `com.unity.template.custom-${templateInfo.name}.tgz`)
     );
     if (await templateFile.exists()) {
         await templateFile.delete();
@@ -41,19 +48,19 @@ export async function projectCommand(options: any): Promise<void> {
 
     const spin = ora("Reading dependencies").start();
 
-    const dependencies: any = await Bun.file(`${project}/Packages/manifest.json`)
+    const dependencies: any = await Bun.file(path.join(project, "Packages", "manifest.json"))
         .json()
         .then((result) => result.dependencies);
 
     const tempPath = await makeTemporary(spin);
 
     spin.text = "Creating package";
-    await mkdir(`${tempPath}/package`);
+    await mkdir(path.join(tempPath, "package"));
     spin.text = "Creating ProjectData~";
-    await mkdir(`${tempPath}/package/ProjectData~`);
+    await mkdir(path.join(tempPath, "package", "ProjectData"));
 
     spin.text = "Creating package json";
-    const packageJsonFile = Bun.file(`${tempPath}/package/package.json`);
+    const packageJsonFile = Bun.file(path.join(tempPath, "package", "package.json"));
     const packageJson = {
         dependencies: {},
         description: "",
@@ -70,41 +77,45 @@ export async function projectCommand(options: any): Promise<void> {
     packageJson.dependencies = dependencies;
     await Bun.write(packageJsonFile, JSON.stringify(packageJson, null, 2));
 
-    const projectData = `${tempPath}/package/ProjectData~`;
+    const projectData = path.join(tempPath, "package", "ProjectData~");
 
     spin.text = "Copying assets";
-    await cp(`${project}/Assets`, `${projectData}/Assets`, {
+    await cp(path.join(project, "Assets"), path.join(projectData, "Assets"), {
         recursive: true,
         force: true,
     });
+
     spin.text = "Copying packages";
-    await cp(`${project}/Packages`, `${projectData}/Packages`, {
+    await cp(path.join(project, "Packages"), path.join(projectData, "Packages"), {
         recursive: true,
         force: true,
     });
     spin.text = "Copying project settings";
-    await cp(`${project}/ProjectSettings`, `${projectData}/ProjectSettings`, {
+    await cp(path.join(project, "ProjectSettings"), path.join(projectData, "ProjectSettings"), {
         recursive: true,
         force: true,
     });
 
     spin.text = "Checking for .gitignore";
-    const gitIgnore = Bun.file(`${project}/.gitignore`);
+    const gitIgnore = Bun.file(path.join(project, ".gitignore"));
 
     if (await gitIgnore.exists()) {
         spin.text = "Copying .gitignore";
-        await Bun.write(`${projectData}/.gitignore`, gitIgnore);
+        await Bun.write(path.join(projectData, ".gitignore"), gitIgnore);
     }
 
     spin.text = "Removing ProjectVersion.txt";
-    await rm(`${project}/ProjectSettings/ProjectVersion.txt`, {
+    await rm(path.join(project, "ProjectSettings", "ProjectVersion.txt"), {
         force: true,
     });
 
     spin.text = "Archiving the template";
-    await $`mv ${tempPath}/package ${savedProjectTemplatesPath}/package`;
-    await $`tar caf ${savedProjectTemplatesPath}/com.unity.template.custom-${templateInfo.name}.tgz --directory ${savedProjectTemplatesPath} package`;
-    await rm(`${savedProjectTemplatesPath}/package`, {
+    await $`mv ${path.join(tempPath, "package")} ${path.join(savedProjectTemplatesPath, "package")}`;
+    await $`tar caf ${path.join(
+        savedProjectTemplatesPath,
+        `com.unity.template.custom-${templateInfo.name}.tgz)`
+    )} --directory ${savedProjectTemplatesPath} package`;
+    await rm(path.join(savedProjectTemplatesPath, "package"), {
         recursive: true,
         force: true,
     });
@@ -118,7 +129,7 @@ export async function projectCommand(options: any): Promise<void> {
 export async function syncProjects(version: EditorVersion): Promise<void> {
     const spinner = ora(`"Syncing project templates for ${version.version}"`).start();
 
-    const templatesPath: string = `${version.path}/${editorProjectTemplatesPath}`;
+    const templatesPath: string = path.join(version.path, editorProjectTemplatesPath);
 
     const existingTemplates: string[] = (await readdir(templatesPath)).filter((template) =>
         template.startsWith("com.unity.template.custom")
@@ -126,7 +137,7 @@ export async function syncProjects(version: EditorVersion): Promise<void> {
 
     spinner.text = "Removing existing custom templates";
     for (const template of existingTemplates) {
-        const templatePath = `${templatesPath}/${template}`;
+        const templatePath = path.join(templatesPath, template);
         await rm(templatePath);
     }
 
@@ -134,7 +145,7 @@ export async function syncProjects(version: EditorVersion): Promise<void> {
     for (const template of customTemplates) {
         spinner.text = `Copying ${template}`;
 
-        await cp(`${savedProjectTemplatesPath}/${template}`, `${templatesPath}/${template}`);
+        await cp(path.join(savedProjectTemplatesPath, template), path.join(templatesPath, template));
     }
 
     spinner.succeed(`Synced project templates for ${version.version}`);
@@ -151,7 +162,7 @@ async function getTemplateInfo(
     selectedProject: string,
     versionAction: string | undefined
 ): Promise<ProjectTemplateInfo> {
-    const templateInfoPath = `${selectedProject}/template-info.json`;
+    const templateInfoPath = path.join(selectedProject, "template-info.json");
 
     if (!(await Bun.file(templateInfoPath).exists())) {
         await Bun.write(templateInfoPath, await createTemplateInfo(), {

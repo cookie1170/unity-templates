@@ -10,7 +10,6 @@ import {
     clearScriptTemplatesCommand,
 } from "./commands/clear";
 import packageJson from "../package.json";
-import { clearTemporary } from "./misc";
 
 const program = new Command();
 

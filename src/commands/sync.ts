@@ -3,6 +3,7 @@ import { multiselect, confirm } from "@topcli/prompts";
 import { syncScripts } from "./script";
 import { getConfig } from "../config";
 import { EditorVersion, getEditorVersions } from "../misc";
+import path from "node:path";
 
 export async function syncCommand() {
     const versions: EditorVersion[] = await getEditorVersions();
@@ -17,7 +18,7 @@ export async function syncCommand() {
                   preSelectedChoices: versionChoices,
               })
     ).map((version) => {
-        return { version: version, path: `${editorPath}/${version}` };
+        return { version: version, path: path.join(editorPath, version) };
     });
 
     for (const version of selectedVersions) {

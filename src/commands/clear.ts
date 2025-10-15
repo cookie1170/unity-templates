@@ -7,6 +7,7 @@ import { savedProjectTemplatesPath } from "./project";
 import { Choice, multiselect } from "@topcli/prompts";
 import { syncPrompt } from "./sync";
 import { getTemplateFromValue } from "../scriptTemplates";
+import path from "node:path";
 
 export async function clearAllCommand() {
     const configFolder = getConfigFolder();
@@ -23,7 +24,7 @@ export async function clearAllCommand() {
 
 export async function clearConfigCommand() {
     const configFolder = getConfigFolder();
-    const configFile = `${configFolder}/config.json`;
+    const configFile = path.join(configFolder, "config.json");
 
     const spinner = ora(`Removing ${formatPath(configFile)}`).start();
 
@@ -71,7 +72,7 @@ export async function clearScriptTemplatesCommand(options: any) {
     const spinner = ora("Removing templates").start();
     for (let template of selectedTemplates) {
         spinner.text = `Removing template ${getTemplateFromValue(template).displayName}`;
-        await rm(`${savedScriptTemplatesPath}/${template}`);
+        await rm(path.join(savedScriptTemplatesPath, template));
     }
 
     await succeed(spinner);
@@ -118,7 +119,7 @@ export async function clearProjectTemplatesCommand(options: any) {
     const spinner = ora("Removing templates").start();
     for (let template of selectedTemplates) {
         spinner.text = `Removing template ${formatTemplate(template)}`;
-        await rm(`${savedProjectTemplatesPath}/${template}`);
+        await rm(path.join(savedProjectTemplatesPath, template));
     }
 
     await succeed(spinner);

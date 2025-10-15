@@ -1,6 +1,7 @@
 import Conf from "conf";
 import { confirm, question } from "@topcli/prompts";
 import { formatToPath } from "./misc";
+import path from "node:path";
 
 const schema = {
     editorPath: {
@@ -20,14 +21,16 @@ export async function initCommand() {
     config.clear();
 
     const editorPath = formatToPath(
+        // TODO: use OS-based path instead!
         await question("Please input the path to the Unity editor", {
-            defaultValue: "~/Unity/Hub/Editor",
+            defaultValue: path.join("~", "Unity", "Hub", "Editor"),
         })
     );
 
     const projectsPath = formatToPath(
+        // TODO: use OS-based path instead!
         await question("Please input your projects path", {
-            defaultValue: "~/Projects/Unity",
+            defaultValue: path.join("~", "Projects", "Unity"),
         })
     );
 
@@ -53,5 +56,5 @@ export async function getConfig<T = string>(configPath: string): Promise<T> {
 
 export function getConfigFolder(): string {
     const configPath: string = config.path;
-    return configPath.replace("/config.json", "");
+    return configPath.replace("config.json", "");
 }
