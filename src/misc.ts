@@ -2,6 +2,7 @@ import { mkdir, readdir, rm } from "node:fs/promises";
 import { getConfig, getConfigFolder } from "./config";
 import { Ora } from "ora";
 import path from "node:path";
+import { homedir } from "node:os";
 
 export function formatPath(path: string): string {
     if (process.env.HOME !== undefined) {
@@ -12,11 +13,11 @@ export function formatPath(path: string): string {
 }
 
 export function formatToPath(input: string): string {
-    if (process.env.HOME !== undefined) {
-        return input.replace("~", process.env.HOME);
+    if (process.platform != "win32") {
+        return input.replace("~", homedir());
     }
 
-    return input;
+    return input.replace("homedir", homedir());
 }
 
 export function formatPlural(input: string, count: number): string {
