@@ -19,6 +19,12 @@ export function formatToPath(input: string): string {
     return input;
 }
 
+export function formatPlural(input: string, count: number): string {
+    if (count != 1) input += "s";
+
+    return input;
+}
+
 export async function getEditorVersions(): Promise<EditorVersion[]> {
     const editorPath = await getConfig("editorPath");
     const versions: string[] = await readdir(`${editorPath}`);
@@ -49,7 +55,10 @@ export async function clearTemporary(spinner: Ora | undefined = undefined): Prom
 
     for (const temporaryFile of temporaryFiles) {
         if (spinner !== undefined) spinner.text = `Removing temporary folder ${temporaryFile}`;
-        await rm(path.join(configFolder, temporaryFile), { recursive: true, force: true });
+        await rm(path.join(configFolder, temporaryFile), {
+            recursive: true,
+            force: true,
+        });
     }
 }
 

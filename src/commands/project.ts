@@ -4,7 +4,7 @@ import { question, select, required } from "@topcli/prompts";
 import { $ } from "bun";
 import { syncPrompt } from "./sync";
 import { getConfig, getConfigFolder } from "../config";
-import { clearTemporary, EditorVersion, makeOrReaddir, makeTemporary } from "../misc";
+import { clearTemporary, EditorVersion, formatPlural, makeOrReaddir, makeTemporary } from "../misc";
 import path from "node:path";
 
 const semverRegex =
@@ -35,9 +35,13 @@ export async function projectCommand(options: any): Promise<void> {
         });
 
         project = path.join(await getConfig("projectsPath"), selectedProject);
-    } else project = options.project.replace("@PROJECTDIR", await getConfig("projectsPath"));
+    } else project = options.project.replace("@projects", await getConfig("projectsPath"));
 
-    const templateInfo: ProjectTemplateInfo = await getTemplateInfo(project, options.versionAction);
+    const templateInfo: ProjectTemplateInfo = await getTemplateInfo(
+        project,
+        options.versionAction,
+        options.silent
+    );
 
     const templateFile = Bun.file(
         path.join(savedProjectTemplatesPath, `com.unity.template.custom-${templateInfo.name}.tgz`)
@@ -46,7 +50,7 @@ export async function projectCommand(options: any): Promise<void> {
         await templateFile.delete();
     }
 
-    const spin = ora("Reading dependencies").start();
+    const spin = ora({ text: "Reading dependencies", isSilent: options.silent }).start();
 
     const dependencies: any = await Bun.file(path.join(project, "Packages", "manifest.json"))
         .json()
@@ -113,7 +117,7 @@ export async function projectCommand(options: any): Promise<void> {
     await $`mv ${path.join(tempPath, "package")} ${path.join(savedProjectTemplatesPath, "package")}`;
     await $`tar caf ${path.join(
         savedProjectTemplatesPath,
-        `com.unity.template.custom-${templateInfo.name}.tgz)`
+        `com.unity.template.custom-${templateInfo.name}.tgz`
     )} --directory ${savedProjectTemplatesPath} package`;
     await rm(path.join(savedProjectTemplatesPath, "package"), {
         recursive: true,
@@ -123,11 +127,11 @@ export async function projectCommand(options: any): Promise<void> {
     await clearTemporary(spin);
     spin.succeed("Done! Open Unity Hub to see your new template");
 
-    await syncPrompt(options.sync);
+    await syncPrompt(options.sync, options.silent);
 }
 
-export async function syncProjects(version: EditorVersion): Promise<void> {
-    const spinner = ora(`"Syncing project templates for ${version.version}"`).start();
+export async function syncProjects(version: EditorVersion, silent: boolean): Promise<void> {
+    const spinner = ora({ text: `Syncing project templates for ${version.version}`, isSilent: silent });
 
     const templatesPath: string = path.join(version.path, editorProjectTemplatesPath);
 
@@ -150,7 +154,7 @@ export async function syncProjects(version: EditorVersion): Promise<void> {
     }
 
     spinner.succeed(
-        `Synced ${customTemplates.length} project template${customTemplates.length != 1 ? "s" : ""} for ${
+        `Synced ${customTemplates.length} project ${formatPlural("template", customTemplates.length)} for ${
             version.version
         }`
     );
@@ -165,7 +169,8 @@ type ProjectTemplateInfo = {
 
 async function getTemplateInfo(
     selectedProject: string,
-    versionAction: string | undefined
+    versionAction: string | undefined,
+    silent: boolean
 ): Promise<ProjectTemplateInfo> {
     const templateInfoPath = path.join(selectedProject, "template-info.json");
 
@@ -191,16 +196,38 @@ async function getTemplateInfo(
         try {
             const versionAction = await select("Select version action", {
                 choices: [
-                    { value: patchBump, label: "Bump patch", description: patchBump },
-                    { value: minorBump, label: "Bump minor", description: minorBump },
-                    { value: majorBump, label: "Bump major", description: majorBump },
-                    { value: "custom", label: "Custom", description: "Input a custom version" },
-                    { value: nothingBump, label: "Do nothing", description: nothingBump },
+                    {
+                        value: patchBump,
+                        label: "Bump patch",
+                        description: patchBump,
+                    },
+                    {
+                        value: minorBump,
+                        label: "Bump minor",
+                        description: minorBump,
+                    },
+                    {
+                        value: majorBump,
+                        label: "Bump major",
+                        description: majorBump,
+                    },
+                    {
+                        value: "custom",
+                        label: "Custom",
+                        description: "Input a custom version",
+                    },
+                    {
+                        value: nothingBump,
+                        label: "Do nothing",
+                        description: nothingBump,
+                    },
                 ],
             });
 
             templateInfo.version =
-                versionAction !== "custom" ? versionAction : await inputSemver("Input custom version");
+                versionAction !== "custom"
+                    ? versionAction
+                    : await inputSemver("Input custom version", silent);
         } catch (e) {
             templateInfo.version = "1.0.0";
         }
@@ -228,7 +255,7 @@ async function getTemplateInfo(
 
             default: {
                 if (versionAction.search(semverRegex) === -1) {
-                    throw new Error(`Invalid semantic version ${versionAction}!`);
+                    throw new Error(`Invalid semantic version ${versionAction}`);
                 }
 
                 templateInfo.version = versionAction;
@@ -242,11 +269,17 @@ async function getTemplateInfo(
 }
 
 async function createTemplateInfo(): Promise<string> {
-    const name: string = await question("Input template name", { validators: [required()] });
+    const name: string = await question("Input template name", {
+        validators: [required()],
+    });
 
-    const displayName: string = await question("Input display name", { validators: [required()] });
+    const displayName: string = await question("Input display name", {
+        validators: [required()],
+    });
 
-    const description: string = await question("Input description", { validators: [required()] });
+    const description: string = await question("Input description", {
+        validators: [required()],
+    });
 
     const version: string = await inputSemver("Input version");
 
@@ -260,7 +293,7 @@ async function createTemplateInfo(): Promise<string> {
     return JSON.stringify(templateInfo, null, 2);
 }
 
-async function inputSemver(message: string): Promise<string> {
+async function inputSemver(message: string, silent: boolean = false): Promise<string> {
     while (true) {
         const value = await question(message, {
             defaultValue: "1.0.0",
@@ -268,7 +301,7 @@ async function inputSemver(message: string): Promise<string> {
 
         const result = value.search(semverRegex);
         if (result === -1) {
-            console.log("Must be a valid semantic version!");
+            if (!silent) console.log("Must be a valid semantic version");
             continue;
         }
 

@@ -5,7 +5,7 @@ import { getConfig } from "../config";
 import { EditorVersion, getEditorVersions } from "../misc";
 import path from "node:path";
 
-export async function syncCommand() {
+export async function syncCommand(options: any) {
     const versions: EditorVersion[] = await getEditorVersions();
     const editorPath: string = await getConfig("editorPath");
 
@@ -22,16 +22,16 @@ export async function syncCommand() {
     });
 
     for (const version of selectedVersions) {
-        await syncProjects(version);
-        await syncScripts(version);
+        await syncProjects(version, options.silent);
+        await syncScripts(version, options.silent);
     }
 }
 
-export async function syncPrompt(override: boolean | undefined = undefined) {
+export async function syncPrompt(override: boolean | undefined = undefined, silent: boolean) {
     if (override === undefined) {
-        if (await confirm("Sync now?", { initial: true })) await syncCommand();
+        if (await confirm("Sync now?", { initial: true })) await syncCommand({ silent: silent });
         return;
     }
 
-    if (override) await syncCommand();
+    if (override) await syncCommand({ silent: silent });
 }

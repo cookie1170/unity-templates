@@ -21,6 +21,7 @@ program
 program
     .command("sync")
     .description("Syncs the templates that Unity uses with the custom saved templates")
+    .option("-S --silent", "Don't output any text (except for interactive prompts, if any)")
     .action(syncCommand);
 
 program
@@ -28,42 +29,59 @@ program
     .description("Make or update a template from a Unity project")
     .option(
         "-p --project <project>",
-        "Specify a project path to use. Use @PROJECTDIR to access the project dir in the config"
+        "Specify a project path to use. Use @projects to access the project dir in the config"
     )
     .option(
-        "--version-action <action>",
+        "-v --version-action <action>",
         'Specify a version action. Use "nothing", "patch", "minor" or "major" or pass a semantic version'
     )
     .option("-s --sync", "Automatically accept the sync prompt")
     .option("--no-sync", "Automatically decline the sync prompt")
+    .option("-S --silent", "Don't output any text (except for interactive prompts, if any)")
     .action(projectCommand);
 
 program
     .command("script")
     .description("Create or edit overrides for Unity script templates")
+    .option("-s --sync", "Automatically accept the sync prompt")
+    .option("--no-sync", "Automatically decline the sync prompt")
+    .option("-S --silent", "Don't output any text (except for interactive prompts, if any)")
     .action(scriptCommand);
 
 program
     .command("init")
     .description("Initializes and interactively sets up the config file")
+    .option("-S --silent", "Don't output any text (except for interactive prompts, if any)")
     .action(initCommand);
 
 const clear = program
     .command("clear")
     .description("Used to clear unity-templates's saved files. See clear --help");
 
-clear.command("all").description("Clears all of unity-templates's saved files").action(clearAllCommand);
+clear
+    .command("all")
+    .option("-s --sync", "Automatically accept the sync prompt")
+    .option("--no-sync", "Automatically decline the sync prompt")
+    .option("-S --silent", "Don't output any text (except for interactive prompts, if any)")
+    .description("Clears all of unity-templates's saved files")
+    .action(clearAllCommand);
 clear.command("config").description("Clears the config file").action(clearConfigCommand);
 
 clear
     .command("script")
     .option("-a --all", "Clears all saved script templates instead of a selection")
+    .option("-s --sync", "Automatically accept the sync prompt")
+    .option("--no-sync", "Automatically decline the sync prompt")
+    .option("-S --silent", "Don't output any text (except for interactive prompts, if any)")
     .description("Clears saved script templates")
     .action(clearScriptTemplatesCommand);
 
 clear
     .command("project")
     .option("-a --all", "Clears all saved project templates instead of a selection")
+    .option("-s --sync", "Automatically accept the sync prompt")
+    .option("--no-sync", "Automatically decline the sync prompt")
+    .option("-S --silent", "Don't output any text (except for interactive prompts, if any)")
     .description("Clears saved project templates")
     .action(clearProjectTemplatesCommand);
 

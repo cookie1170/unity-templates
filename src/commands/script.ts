@@ -4,13 +4,13 @@ import ora from "ora";
 import { syncPrompt } from "./sync";
 import open from "open";
 import { getTemplateFromValue, scriptTemplates } from "../scriptTemplates";
-import { EditorVersion } from "../misc";
+import { EditorVersion, formatPlural } from "../misc";
 import path from "node:path";
 
 export const savedScriptTemplatesPath: string = path.join(getConfigFolder(), "script-template");
 const editorScriptTemplatesPath: string = path.join("Editor", "Data", "Resources", "ScriptTemplates");
 
-export async function scriptCommand() {
+export async function scriptCommand(options: any) {
     const choices: Choice<string>[] = scriptTemplates.map((template) => {
         return {
             label: template.displayName,
@@ -69,11 +69,16 @@ export async function scriptCommand() {
         }
     }
 
-    await syncPrompt();
+    await syncPrompt(options.sync, options.silent);
 }
 
-export async function syncScripts(version: EditorVersion) {
-    const spinner = ora(`Syncing script templates for version ${version.version}`);
+export async function syncScripts(version: EditorVersion, silent: boolean) {
+    const spinner = ora({
+        text: `Syncing script templates for version ${version.version}`,
+        isSilent: silent,
+    });
+
+    if (!silent) spinner.start();
 
     let templateCount: number = 0;
 
@@ -93,7 +98,7 @@ export async function syncScripts(version: EditorVersion) {
     }
 
     spinner.succeed(
-        `Synced ${templateCount} script template${templateCount != 1 ? "s" : ""} for version ${
+        `Synced ${templateCount} script ${formatPlural("template", templateCount)} for version ${
             version.version
         }`
     );

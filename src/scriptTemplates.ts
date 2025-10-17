@@ -52,19 +52,7 @@ public class #SCRIPTNAME# : ScriptableObject
 #ROOTNAMESPACEEND#
 `,
     },
-    {
-        value: "3-Scripting__Empty C# Script-NewEmptyCSharpScript.cs.txt",
-        displayName: "Empty C# Script",
-        defaultValue: `using UnityEngine;
 
-    #ROOTNAMESPACEBEGIN#
-public class #SCRIPTNAME#
-{
-    #NOTRIM#
-}
-#ROOTNAMESPACEEND#
-`,
-    },
     {
         value: "3-Scripting__MonoBehaviour Script-NewTestScript.cs.txt",
         displayName: "Test Script",
@@ -92,6 +80,19 @@ public class #SCRIPTNAME#
         // Use yield to skip a frame.
         yield return null;
     }
+}
+#ROOTNAMESPACEEND#
+`,
+    },
+    {
+        value: "3-Scripting__Empty C# Script-NewEmptyCSharpScript.cs.txt",
+        displayName: "Empty C# Script",
+        defaultValue: `using UnityEngine;
+
+    #ROOTNAMESPACEBEGIN#
+public class #SCRIPTNAME#
+{
+    #NOTRIM#
 }
 #ROOTNAMESPACEEND#
 `,
