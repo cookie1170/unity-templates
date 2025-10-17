@@ -4,7 +4,15 @@ import { question, select, required } from "@topcli/prompts";
 import { $ } from "bun";
 import { syncPrompt } from "./sync";
 import { getConfig, getConfigFolder } from "../config";
-import { clearTemporary, EditorVersion, formatPlural, makeOrReaddir, makeTemporary } from "../misc";
+import {
+    clearTemporary,
+    EditorVersion,
+    formatPlural,
+    isValidUnityProject,
+    makeOrReaddir,
+    makeTemporary,
+    readUnityProjects,
+} from "../misc";
 import path from "node:path";
 
 const semverRegex =
@@ -24,7 +32,7 @@ export async function projectCommand(options: any): Promise<void> {
         await mkdir(savedProjectTemplatesPath);
     }
 
-    const projectNames: string[] = await readdir(await getConfig("projectsPath"));
+    const projectNames: string[] = await readUnityProjects();
 
     let project: string;
 
@@ -36,6 +44,11 @@ export async function projectCommand(options: any): Promise<void> {
 
         project = path.join(await getConfig("projectsPath"), selectedProject);
     } else project = options.project.replace("@projects", await getConfig("projectsPath"));
+
+    if (!(await isValidUnityProject(project))) {
+        ora({ isSilent: options.silent }).fail("Invalid Unity project");
+        process.exit(1);
+    }
 
     const templateInfo: ProjectTemplateInfo = await getTemplateInfo(
         project,
@@ -109,9 +122,11 @@ export async function projectCommand(options: any): Promise<void> {
     }
 
     spin.text = "Removing ProjectVersion.txt";
-    await rm(path.join(project, "ProjectSettings", "ProjectVersion.txt"), {
-        force: true,
-    });
+    const projectVersion = path.join(project, "ProjectSettings", "ProjectVersion.txt");
+    if (await exists(projectVersion))
+        await rm(projectVersion, {
+            force: true,
+        });
 
     spin.text = "Archiving the template";
     await $`mv ${path.join(tempPath, "package")} ${path.join(savedProjectTemplatesPath, "package")}`;

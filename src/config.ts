@@ -1,19 +1,6 @@
 import Conf from "conf";
-import { confirm, question } from "@topcli/prompts";
-import { formatToPath } from "./misc";
-import path from "node:path";
-
-const defaultEditorPaths: Map<string, string> = new Map([
-    ["darvin", path.join("/", "Applications", "Unity", "Hub", "Editor")],
-    ["linux", path.join("~", "Unity", "Hub", "Editor")],
-    ["win32", path.join("C:", "Program Files", "Unity", "Hub", "Editor")],
-]);
-
-const defaultProjectPaths: Map<string, string> = new Map([
-    ["darvin", path.join("~", "Projects", "Unity")],
-    ["linux", path.join("~", "Projects", "Unity")],
-    ["win32", path.join("homedir", "Documents", "Projects", "Unity")],
-]);
+import { confirm } from "@topcli/prompts";
+import { initCommand } from "./commands/init";
 
 const schema = {
     editorPath: {
@@ -28,26 +15,6 @@ export const config = new Conf({
     projectName: "unity-templates",
     schema,
 });
-
-export async function initCommand() {
-    process.platform;
-    config.clear();
-
-    const editorPath = formatToPath(
-        await question("Please input the path to the Unity editor", {
-            defaultValue: defaultEditorPaths.get(process.platform),
-        })
-    );
-
-    const projectsPath = formatToPath(
-        await question("Please input your projects path", {
-            defaultValue: defaultProjectPaths.get(process.platform),
-        })
-    );
-
-    config.set("editorPath", editorPath);
-    config.set("projectsPath", projectsPath);
-}
 
 export async function getConfig<T = string>(configPath: string): Promise<T> {
     const configValue: string | undefined = config.get(configPath, undefined);

@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { syncCommand } from "./commands/sync";
 import { projectCommand } from "./commands/project";
 import { scriptCommand } from "./commands/script";
-import { initCommand } from "./config";
+import { initCommand } from "./commands/init";
 import {
     clearAllCommand,
     clearConfigCommand,

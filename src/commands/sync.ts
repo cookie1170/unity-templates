@@ -2,11 +2,11 @@ import { syncProjects } from "./project";
 import { multiselect, confirm } from "@topcli/prompts";
 import { syncScripts } from "./script";
 import { getConfig } from "../config";
-import { EditorVersion, getEditorVersions } from "../misc";
+import { EditorVersion, readUnityEditorVersions } from "../misc";
 import path from "node:path";
 
 export async function syncCommand(options: any) {
-    const versions: EditorVersion[] = await getEditorVersions();
+    const versions: EditorVersion[] = await readUnityEditorVersions();
     const editorPath: string = await getConfig("editorPath");
 
     const versionChoices: string[] = versions.map((version) => version.version);
