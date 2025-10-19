@@ -8,6 +8,9 @@
         "dev": "bun run src/index.ts",
         "build": "bun build --target node --entrypoints ./src/index.ts --outdir ./dist"
     },
+    "files": [
+        "dist"
+    ],
     "dependencies": {
         "@topcli/prompts": "^2.4.1",
         "commander": "^14.0.1",
