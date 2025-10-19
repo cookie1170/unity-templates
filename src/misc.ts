@@ -1,9 +1,13 @@
-import { exists, mkdir, readdir, rm } from "node:fs/promises";
+import { exists, mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
 import { getConfig, getConfigFolder } from "./config";
-import { Ora } from "ora";
+import ora, { Ora } from "ora";
 import path from "node:path";
-import { homedir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { existsSync } from "fs";
+import { rmSync } from "node:fs";
+
+const tmpPrefix: string = path.join(tmpdir(), `unity-templates-nodejs-`);
+let tmpDirs: string[] = [];
 
 export function formatPath(path: string): string {
     if (process.platform != "win32") {
@@ -47,32 +51,42 @@ export async function makeOrReaddir(dir: string): Promise<string[]> {
 }
 
 export async function makeTemporary(spinner: Ora | undefined = undefined): Promise<string> {
-    const configFolder = getConfigFolder();
+    if (spinner !== undefined) spinner.text = `Making temporary folder`;
 
-    const tempPath: string = path.join(configFolder, "tmp-${Date.now()");
-    if (spinner !== undefined) spinner.text = `Making temporary folder at ${tempPath}`;
+    const folder: string = await mkdtemp(tmpPrefix).catch(async (reason) => {
+        if (spinner !== undefined)
+            spinner.warn(`Failed to create temporary folder:\n${reason}\nFalling back to config dir`).start();
 
-    await mkdir(tempPath);
-    return tempPath;
+        const tmpPath: string = path.join(getConfigFolder(), `tmp-${Date.now()}`);
+        await mkdir(tmpPath, { recursive: true });
+
+        return tmpPath;
+    });
+    tmpDirs.push(folder);
+    return folder;
 }
 
-export async function clearTemporary(spinner: Ora | undefined = undefined): Promise<void> {
-    const configFolder = getConfigFolder();
-    const temporaryFiles: string[] = (await readdir(configFolder)).filter((dir) => dir.startsWith("tmp"));
+export function cleanupTemporary(): void {
+    if (tmpDirs.length <= 0) return;
 
-    for (const temporaryFile of temporaryFiles) {
-        if (spinner !== undefined) spinner.text = `Removing temporary folder ${temporaryFile}`;
-        await rm(path.join(configFolder, temporaryFile), {
+    const spinner = ora("Cleaning up temporary directories").start();
+
+    for (const tmpDir of tmpDirs) {
+        spinner.text = `Removing temporary directory ${tmpDir}`;
+        rmSync(tmpDir, {
             recursive: true,
             force: true,
         });
     }
+
+    spinner.succeed("Cleaned up temporary directories");
 }
 
 export type EditorVersion = {
     version: string;
     path: string;
 };
+
 export async function readUnityProjects(
     projectsPathOverride: string | undefined = undefined
 ): Promise<string[]> {

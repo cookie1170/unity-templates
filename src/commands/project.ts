@@ -1,11 +1,11 @@
-import { readdir, rm, mkdir, exists, cp, rename } from "node:fs/promises";
+import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
 import ora from "ora";
 import { question, select, required } from "@topcli/prompts";
 import { $ } from "bun";
 import { syncPrompt } from "./sync";
 import { getConfig, getConfigFolder } from "../config";
 import {
-    clearTemporary,
+    cleanupTemporary,
     EditorVersion,
     formatPlural,
     isValidUnityProject,
@@ -137,9 +137,11 @@ export async function projectCommand(options: any): Promise<void> {
     // need to cd into savedProjectTemplatesPath because tar is weird and includes the full path
     await $`cd ${tempPath} && tar czf ${archivePath} package`;
 
-    await rename(archivePath, path.join(savedProjectTemplatesPath, archiveName));
+    await cp(archivePath, path.join(savedProjectTemplatesPath, archiveName), {
+        recursive: true,
+        force: true,
+    });
 
-    await clearTemporary(spin);
     spin.succeed("Done! Open Unity Hub to see your new template");
 
     await syncPrompt(options.sync, options.silent);

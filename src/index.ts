@@ -11,6 +11,10 @@ import {
 } from "./commands/clear";
 import packageJson from "../package.json";
 import { openConfigCommand } from "./commands/openConfig";
+import exitHook from "exit-hook";
+import { cleanupTemporary } from "./misc";
+
+exitHook(cleanupTemporary);
 
 const program = new Command();
 
