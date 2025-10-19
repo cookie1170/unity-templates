@@ -27,11 +27,20 @@ export async function syncCommand(options: any) {
     }
 }
 
-export async function syncPrompt(override: boolean | undefined = undefined, silent: boolean) {
+export async function syncPrompt(
+    override: boolean | undefined = undefined,
+    silent: boolean,
+    beforeSync: ((didSync: boolean) => void | Promise<void>) | undefined = undefined
+) {
     if (override === undefined) {
-        if (await confirm("Sync now?", { initial: true })) await syncCommand({ silent: silent });
+        trySync(await confirm("Sync now?", { initial: true }));
         return;
     }
 
-    if (override) await syncCommand({ silent: silent });
+    trySync(override);
+
+    async function trySync(didAccept: boolean) {
+        if (beforeSync !== undefined) await beforeSync(didAccept);
+        if (didAccept) await syncCommand({ silent: silent });
+    }
 }

@@ -1,11 +1,12 @@
-import { Choice, multiselect, confirm, required, select } from "@topcli/prompts";
+import { Choice, multiselect, required, select } from "@topcli/prompts";
 import { getConfigFolder } from "../config";
 import ora from "ora";
 import { syncPrompt } from "./sync";
 import open from "open";
 import { getTemplateFromValue, scriptTemplates } from "../scriptTemplates";
-import { EditorVersion, formatPlural } from "../misc";
+import { EditorVersion, formatPlural, makeTemporary } from "../misc";
 import path from "node:path";
+import { cp } from "node:fs/promises";
 
 export const savedScriptTemplatesPath: string = path.join(getConfigFolder(), "script-templates");
 const editorScriptTemplatesPath: string = path.join("Editor", "Data", "Resources", "ScriptTemplates");
@@ -20,28 +21,32 @@ export async function scriptCommand(options: any) {
 
     const chosenTemplates: string[] = await multiselect("Select templates to edit", {
         choices: choices,
-        autocomplete: true,
         validators: [required()],
     });
 
-    for (let i = 0; i < chosenTemplates.length; i++) {
-        const chosenTemplate = chosenTemplates[i];
+    const tmpDir: string = await makeTemporary();
 
-        const templatePath: string = path.join(savedScriptTemplatesPath, chosenTemplate);
+    for (let i = 0; i < chosenTemplates.length; i++) {
+        const template = chosenTemplates[i];
+
+        const templatePath: string = path.join(tmpDir, formatScriptTemplateForHighlighting(template));
         const templateFile = Bun.file(templatePath);
-        if (!(await templateFile.exists())) {
-            const templateText = getTemplateFromValue(chosenTemplate).defaultValue;
+        const savedTemplateFile = Bun.file(path.join(savedScriptTemplatesPath, template));
+
+        if (!(await savedTemplateFile.exists())) {
+            const templateText = getTemplateFromValue(template).defaultValue;
 
             await Bun.file(templatePath).write(templateText);
-        }
+        } else await templateFile.write(savedTemplateFile);
 
-        await open(templatePath, { wait: true });
+        await open(templatePath);
         if (i < chosenTemplates.length - 1) {
             const choices: Choice<string>[] = [
                 {
                     value: "next",
                     label: `Next (${getTemplateFromValue(chosenTemplates[i + 1]).displayName})`,
                 },
+                { value: "cancel", label: `Cancel the operation` },
                 { value: "openAgain", label: "Open again" },
             ];
 
@@ -65,11 +70,27 @@ export async function scriptCommand(options: any) {
                     i -= 2;
                     break;
                 }
+
+                case "cancel": {
+                    process.exit(1);
+                }
             }
         }
     }
 
-    await syncPrompt(options.sync, options.silent);
+    await syncPrompt(options.sync, options.silent, async () => {
+        const spinner = ora("Copying templates").start();
+
+        for (const template of chosenTemplates) {
+            spinner.text = `Copying template ${getTemplateFromValue(template)}`;
+            await cp(
+                path.join(tmpDir, formatScriptTemplateForHighlighting(template)),
+                path.join(savedScriptTemplatesPath, template)
+            );
+        }
+
+        spinner.succeed(`Copied ${chosenTemplates.length} templates`);
+    });
 }
 
 export async function syncScripts(version: EditorVersion, silent: boolean) {
@@ -102,4 +123,10 @@ export async function syncScripts(version: EditorVersion, silent: boolean) {
             version.version
         }`
     );
+}
+
+function formatScriptTemplateForHighlighting(template: string): string {
+    const noTxt = template.replace(".txt", "");
+
+    return noTxt;
 }
