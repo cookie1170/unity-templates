@@ -1,4 +1,4 @@
-import { readdir, rm, mkdir, cp } from "node:fs/promises";
+import { readdir, rm, mkdir, cp, readFile, writeFile } from "node:fs/promises";
 import ora from "ora";
 import { create } from "tar";
 import { question, select, required } from "@topcli/prompts";
@@ -62,18 +62,17 @@ export async function projectCommand(options: any): Promise<void> {
         options.silent
     );
 
-    const templateFile = Bun.file(
-        path.join(savedProjectTemplatesPath, `com.unity.template.custom-${templateInfo.name}.tgz`)
-    );
-    if (await templateFile.exists()) {
-        await templateFile.delete();
+    const archiveName: string = `com.unity.template.custom-${templateInfo.name}.tgz`;
+    const savedTemplatePath = path.join(savedProjectTemplatesPath, archiveName);
+
+    if (await exists(savedTemplatePath)) {
+        await rm(savedTemplatePath);
     }
 
     const spin = ora({ text: "Reading dependencies", isSilent: options.silent }).start();
 
-    const dependencies: any = await Bun.file(path.join(project, "Packages", "manifest.json"))
-        .json()
-        .then((result) => result.dependencies);
+    const packagesManifest = path.join(project, "Packages", "manifest.json");
+    const dependencies: any = JSON.parse(await readFile(packagesManifest, { encoding: "utf8" })).dependencies;
 
     const tempPath = await makeTemporary(spin);
 
@@ -84,7 +83,7 @@ export async function projectCommand(options: any): Promise<void> {
     await mkdir(path.join(tempPath, "package", "ProjectData~"));
 
     spin.text = "Creating package json";
-    const packageJsonFile = Bun.file(path.join(tempPath, "package", "package.json"));
+    const packageJsonPath = path.join(tempPath, "package", "package.json");
     const packageJson = {
         dependencies: {},
         description: "",
@@ -99,7 +98,7 @@ export async function projectCommand(options: any): Promise<void> {
     packageJson.description = templateInfo.description;
     packageJson.version = templateInfo.version;
     packageJson.dependencies = dependencies;
-    await Bun.write(packageJsonFile, JSON.stringify(packageJson, null, 2));
+    await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
     const projectData = path.join(tempPath, "package", "ProjectData~");
 
@@ -121,11 +120,11 @@ export async function projectCommand(options: any): Promise<void> {
     });
 
     spin.text = "Checking for .gitignore";
-    const gitIgnore = Bun.file(path.join(project, ".gitignore"));
+    const gitIgnore = path.join(project, ".gitignore");
 
-    if (await gitIgnore.exists()) {
+    if (await exists(gitIgnore)) {
         spin.text = "Copying .gitignore";
-        await Bun.write(path.join(projectData, ".gitignore"), gitIgnore);
+        await cp(gitIgnore, path.join(projectData, ".gitignore"));
     }
 
     spin.text = "Removing ProjectVersion.txt";
@@ -137,7 +136,6 @@ export async function projectCommand(options: any): Promise<void> {
 
     spin.text = "Archiving the template";
 
-    const archiveName: string = `com.unity.template.custom-${templateInfo.name}.tgz`;
     const archivePath: string = path.join(tempPath, archiveName);
 
     await create(
@@ -149,7 +147,7 @@ export async function projectCommand(options: any): Promise<void> {
         ["package"]
     );
 
-    await cp(archivePath, path.join(savedProjectTemplatesPath, archiveName), {
+    await cp(archivePath, savedTemplatePath, {
         recursive: true,
         force: true,
     });
@@ -203,13 +201,14 @@ async function getTemplateInfo(
 ): Promise<ProjectTemplateInfo> {
     const templateInfoPath = path.join(selectedProject, "template-info.json");
 
-    if (!(await Bun.file(templateInfoPath).exists())) {
-        await Bun.write(templateInfoPath, await createTemplateInfo(), {
-            createPath: true,
-        });
+    if (!(await exists(templateInfoPath))) {
+        await writeFile(templateInfoPath, await createTemplateInfo());
     }
 
-    const templateInfo: ProjectTemplateInfo = await Bun.file(templateInfoPath).json();
+    const templateInfo: ProjectTemplateInfo = JSON.parse(
+        await readFile(templateInfoPath, { encoding: "utf8" })
+    );
+
     const semanticVersion: string[] = templateInfo.version.split(".");
 
     let majorVersion: number = parseInt(semanticVersion[0] ?? "0");
@@ -292,7 +291,7 @@ async function getTemplateInfo(
         }
     }
 
-    await Bun.write(templateInfoPath, JSON.stringify(templateInfo, null, 2));
+    await writeFile(templateInfoPath, JSON.stringify(templateInfo, null, 2));
 
     return templateInfo;
 }

@@ -4,9 +4,9 @@ import ora from "ora";
 import { syncPrompt } from "./sync";
 import open from "open";
 import { getTemplateFromValue, scriptTemplates } from "../scriptTemplates";
-import { cleanupTemporary, EditorVersion, formatPlural, makeTemporary } from "../misc";
+import { cleanupTemporary, EditorVersion, exists, formatPlural, makeTemporary } from "../misc";
 import path from "node:path";
-import { cp } from "node:fs/promises";
+import { cp, readFile, writeFile } from "node:fs/promises";
 import exitHook from "exit-hook";
 
 export const savedScriptTemplatesPath: string = path.join(getConfigFolder(), "script-templates");
@@ -35,14 +35,16 @@ export async function scriptCommand(options: any) {
         const template = chosenTemplates[i];
 
         const templatePath: string = path.join(tmpDir, formatScriptTemplateForHighlighting(template));
-        const templateFile = Bun.file(templatePath);
-        const savedTemplateFile = Bun.file(path.join(savedScriptTemplatesPath, template));
+        const savedTemplateFile = path.join(savedScriptTemplatesPath, template);
 
-        if (!(await savedTemplateFile.exists())) {
+        if (!(await exists(savedTemplateFile))) {
             const templateText = getTemplateFromValue(template).defaultValue;
 
-            await Bun.file(templatePath).write(templateText);
-        } else await templateFile.write(savedTemplateFile);
+            await writeFile(templatePath, templateText);
+        } else {
+            const savedTemplateContents = await readFile(savedTemplateFile, { encoding: "utf8" });
+            await writeFile(templatePath, savedTemplateContents);
+        }
 
         await open(templatePath);
         if (i < chosenTemplates.length - 1) {
@@ -109,17 +111,15 @@ export async function syncScripts(version: EditorVersion, silent: boolean) {
     let templateCount: number = 0;
 
     for (const template of scriptTemplates) {
-        const editorTemplateFile = Bun.file(
-            path.join(version.path, editorScriptTemplatesPath, template.value)
-        );
+        const editorTemplateFile = path.join(version.path, editorScriptTemplatesPath, template.value);
         spinner.text = `Resetting template ${template.displayName}`;
-        await Bun.write(editorTemplateFile, template.defaultValue);
+        await writeFile(editorTemplateFile, template.defaultValue);
 
-        const savedTemplateFile = Bun.file(path.join(savedScriptTemplatesPath, template.value));
-        if (!(await savedTemplateFile.exists())) continue;
+        const savedTemplateFile = path.join(savedScriptTemplatesPath, template.value);
+        if (!(await exists(savedTemplateFile))) continue;
 
         spinner.text = `Copying template ${template.displayName}`;
-        await Bun.write(editorTemplateFile, await savedTemplateFile.text());
+        await writeFile(editorTemplateFile, await readFile(savedTemplateFile));
         templateCount++;
     }
 
