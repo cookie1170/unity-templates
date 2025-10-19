@@ -1,7 +1,7 @@
 import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
 import ora from "ora";
+import { create } from "tar";
 import { question, select, required } from "@topcli/prompts";
-import { $ } from "bun";
 import { syncPrompt } from "./sync";
 import { getConfig, getConfigFolder } from "../config";
 import {
@@ -139,8 +139,14 @@ export async function projectCommand(options: any): Promise<void> {
     const archiveName: string = `com.unity.template.custom-${templateInfo.name}.tgz`;
     const archivePath: string = path.join(tempPath, archiveName);
 
-    // need to cd into savedProjectTemplatesPath because tar is weird and includes the full path
-    await $`cd ${tempPath} && tar czf ${archivePath} package`;
+    await create(
+        {
+            gzip: true,
+            file: archivePath,
+            cwd: tempPath,
+        },
+        ["package"]
+    );
 
     await cp(archivePath, path.join(savedProjectTemplatesPath, archiveName), {
         recursive: true,
