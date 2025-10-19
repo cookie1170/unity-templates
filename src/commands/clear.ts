@@ -1,7 +1,7 @@
 import ora from "ora";
 import { config, getConfigFolder } from "../config";
-import { exists, readdir, rm } from "node:fs/promises";
-import { formatPath, formatPlural, makeOrReaddir } from "../misc";
+import { readdir, rm } from "node:fs/promises";
+import { exists, formatPath, formatPlural, makeOrReaddir } from "../misc";
 import { savedScriptTemplatesPath } from "./script";
 import { savedProjectTemplatesPath } from "./project";
 import { Choice, multiselect, required } from "@topcli/prompts";

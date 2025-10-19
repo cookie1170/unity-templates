@@ -1,4 +1,4 @@
-import { exists, mkdir, mkdtemp, readdir } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readdir } from "node:fs/promises";
 import { getConfig, getConfigFolder } from "./config";
 import ora, { Ora } from "ora";
 import path from "node:path";
@@ -48,6 +48,15 @@ export async function readUnityEditorVersions(
 export async function makeOrReaddir(dir: string): Promise<string[]> {
     await mkdir(dir, { recursive: true });
     return await readdir(dir);
+}
+
+export async function exists(file: string): Promise<boolean> {
+    try {
+        await access(file);
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 export async function makeTemporary(spinner: Ora | undefined = undefined): Promise<string> {

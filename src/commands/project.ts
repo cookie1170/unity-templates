@@ -1,4 +1,4 @@
-import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
+import { readdir, rm, mkdir, cp } from "node:fs/promises";
 import ora from "ora";
 import { create } from "tar";
 import { question, select, required } from "@topcli/prompts";
@@ -7,6 +7,7 @@ import { getConfig, getConfigFolder } from "../config";
 import {
     cleanupTemporary,
     EditorVersion,
+    exists,
     formatPlural,
     isValidUnityProject,
     makeOrReaddir,
