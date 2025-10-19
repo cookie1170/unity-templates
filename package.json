@@ -10,7 +10,7 @@
     },
     "scripts": {
         "dev": "bun run src/index.ts",
-        "build": "bun build --target node --entrypoints ./src/index.ts --outdir ./dist"
+        "build": "bun build --target node --entrypoints ./src/index.ts --outdir ./dist --production"
     },
     "files": [
         "dist"
