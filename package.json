@@ -1,6 +1,6 @@
 {
     "name": "unity-templates",
-    "version": "0.13.9",
+    "version": "0.13.10",
     "type": "module",
     "description": "A CLI tool for managing Unity script and project templates",
     "author": "cookie1170",
