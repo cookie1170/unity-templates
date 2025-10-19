@@ -4,14 +4,19 @@ import ora from "ora";
 import { syncPrompt } from "./sync";
 import open from "open";
 import { getTemplateFromValue, scriptTemplates } from "../scriptTemplates";
-import { EditorVersion, formatPlural, makeTemporary } from "../misc";
+import { cleanupTemporary, EditorVersion, formatPlural, makeTemporary } from "../misc";
 import path from "node:path";
 import { cp } from "node:fs/promises";
+import exitHook from "exit-hook";
 
 export const savedScriptTemplatesPath: string = path.join(getConfigFolder(), "script-templates");
 const editorScriptTemplatesPath: string = path.join("Editor", "Data", "Resources", "ScriptTemplates");
 
 export async function scriptCommand(options: any) {
+    exitHook(() => {
+        cleanupTemporary(options.silent);
+    });
+
     const choices: Choice<string>[] = scriptTemplates.map((template) => {
         return {
             label: template.displayName,

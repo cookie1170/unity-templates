@@ -54,8 +54,10 @@ export async function makeTemporary(spinner: Ora | undefined = undefined): Promi
     if (spinner !== undefined) spinner.text = `Making temporary folder`;
 
     const folder: string = await mkdtemp(tmpPrefix).catch(async (reason) => {
-        if (spinner !== undefined)
-            spinner.warn(`Failed to create temporary folder:\n${reason}\nFalling back to config dir`).start();
+        const warningString = `Failed to create temporary folder:\n${reason}\nFalling back to config dir\nThis might fail to get cleaned up, make sure to run 'unity-templates open-config' and check\n`;
+
+        if (spinner !== undefined) spinner.warn(warningString).start();
+        else console.warn(warningString);
 
         const tmpPath: string = path.join(getConfigFolder(), `tmp-${Date.now()}`);
         await mkdir(tmpPath, { recursive: true });
@@ -66,10 +68,10 @@ export async function makeTemporary(spinner: Ora | undefined = undefined): Promi
     return folder;
 }
 
-export function cleanupTemporary(): void {
+export function cleanupTemporary(silent: boolean): void {
     if (tmpDirs.length <= 0) return;
 
-    const spinner = ora("Cleaning up temporary directories").start();
+    const spinner = ora({ text: "Cleaning up temporary directories", isSilent: silent }).start();
 
     for (const tmpDir of tmpDirs) {
         spinner.text = `Removing temporary directory ${tmpDir}`;

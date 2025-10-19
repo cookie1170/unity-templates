@@ -14,6 +14,7 @@ import {
     readUnityProjects,
 } from "../misc";
 import path from "node:path";
+import exitHook from "exit-hook";
 
 const semverRegex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
@@ -28,6 +29,10 @@ const editorProjectTemplatesPath: string = path.join(
 );
 
 export async function projectCommand(options: any): Promise<void> {
+    exitHook(() => {
+        cleanupTemporary(options.silent);
+    });
+
     if (!(await exists(savedProjectTemplatesPath))) {
         await mkdir(savedProjectTemplatesPath);
     }
