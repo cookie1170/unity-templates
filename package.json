@@ -1,6 +1,6 @@
 {
     "name": "unity-templates",
-    "version": "0.13.15",
+    "version": "0.13.16",
     "type": "module",
     "description": "A CLI tool for managing Unity script and project templates",
     "author": "cookie1170",
@@ -10,7 +10,7 @@
     },
     "scripts": {
         "dev": "bun run src/index.ts",
-        "build": "bun build --target node --entrypoints ./src/index.ts --outdir ./dist --production"
+        "build": "rm -f ./dist/index.js && touch ./dist/index.js && echo \"#!/usr/bin/env node\" >> ./dist/index.js && bun build --target node --entrypoints ./src/index.ts --production >> ./dist/index.js"
     },
     "files": [
         "dist"
