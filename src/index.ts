@@ -66,7 +66,7 @@ program
 
 const clear = program
     .command("clear")
-    .description("Used to clear unity-templates's saved files. See clear --help");
+    .description("Used to clear unity-templates's saved files. See unity-templates clear --help");
 
 clear
     .command("all")
