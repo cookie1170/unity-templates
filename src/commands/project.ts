@@ -122,7 +122,7 @@ export async function projectCommand(options: any): Promise<void> {
     }
 
     spin.text = "Removing ProjectVersion.txt";
-    const projectVersion = path.join(project, "ProjectSettings", "ProjectVersion.txt");
+    const projectVersion = path.join(projectData, "ProjectSettings", "ProjectVersion.txt");
     if (await exists(projectVersion))
         await rm(projectVersion, {
             force: true,
