@@ -1,4 +1,4 @@
-import { exists, mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
+import { exists, mkdir, mkdtemp, readdir } from "node:fs/promises";
 import { getConfig, getConfigFolder } from "./config";
 import ora, { Ora } from "ora";
 import path from "node:path";

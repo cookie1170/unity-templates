@@ -1,4 +1,4 @@
-import ora, { Ora } from "ora";
+import ora from "ora";
 import { config, getConfigFolder } from "../config";
 import { exists, readdir, rm } from "node:fs/promises";
 import { formatPath, formatPlural, makeOrReaddir } from "../misc";
