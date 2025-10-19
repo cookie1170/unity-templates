@@ -4,9 +4,6 @@
     "type": "module",
     "description": "A CLI tool for managing Unity script and project templates",
     "author": "cookie1170",
-    "bin": {
-        "unity-templates": "./bin/run.js"
-    },
     "scripts": {
         "dev": "bun run src/index.ts",
         "test": "bun test",

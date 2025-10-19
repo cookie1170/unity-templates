@@ -14,10 +14,7 @@ import { openConfigCommand } from "./commands/openConfig";
 
 export const program = new Command();
 
-program
-    .name("unity-templates")
-    .description("A CLI tool for managing Unity script and project templates")
-    .version(packageJson.version);
+program.name(packageJson.name).description(packageJson.description).version(packageJson.version);
 
 program
     .command("sync")
