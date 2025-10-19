@@ -4,6 +4,7 @@
     "type": "module",
     "description": "A CLI tool for managing Unity script and project templates",
     "author": "cookie1170",
+    "main": "./dist/index.js",
     "scripts": {
         "dev": "bun run src/index.ts",
         "build": "bun build --target node --entrypoints ./src/index.ts --outdir ./dist"
