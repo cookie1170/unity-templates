@@ -5,6 +5,9 @@
     "description": "A CLI tool for managing Unity script and project templates",
     "author": "cookie1170",
     "preferGlobal": true,
+    "engines": {
+        "node": ">=18"
+    },
     "bin": {
         "unity-templates": "./dist/index.js"
     },
