@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { syncCommand } from "./commands/sync";
 import { projectCommand } from "./commands/project";
 import { scriptCommand } from "./commands/script";
@@ -10,6 +10,7 @@ import {
     clearScriptTemplatesCommand,
 } from "./commands/clear";
 import packageJson from "../package.json";
+import { openConfigCommand } from "./commands/openConfig";
 
 const program = new Command();
 
@@ -53,6 +54,18 @@ program
     .description("Initializes and interactively sets up the config file")
     .option("-S --silent", "Don't output any text (except for interactive prompts, if any)")
     .action(initCommand);
+
+program
+    .command("open-config")
+    .description("Opens the config path with your default application")
+    .addOption(
+        new Option("-f --file <file>", "Specify the file (or directory) to open").choices([
+            "common",
+            "project",
+            "script",
+        ])
+    )
+    .action(openConfigCommand);
 
 const clear = program
     .command("clear")

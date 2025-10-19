@@ -7,7 +7,7 @@ import { getTemplateFromValue, scriptTemplates } from "../scriptTemplates";
 import { EditorVersion, formatPlural } from "../misc";
 import path from "node:path";
 
-export const savedScriptTemplatesPath: string = path.join(getConfigFolder(), "script-template");
+export const savedScriptTemplatesPath: string = path.join(getConfigFolder(), "script-templates");
 const editorScriptTemplatesPath: string = path.join("Editor", "Data", "Resources", "ScriptTemplates");
 
 export async function scriptCommand(options: any) {
