@@ -1,4 +1,4 @@
-import { readdir, rm, mkdir, exists, cp } from "node:fs/promises";
+import { readdir, rm, mkdir, exists, cp, rename } from "node:fs/promises";
 import ora from "ora";
 import { question, select, required } from "@topcli/prompts";
 import { $ } from "bun";
@@ -73,8 +73,9 @@ export async function projectCommand(options: any): Promise<void> {
 
     spin.text = "Creating package";
     await mkdir(path.join(tempPath, "package"));
+
     spin.text = "Creating ProjectData~";
-    await mkdir(path.join(tempPath, "package", "ProjectData"));
+    await mkdir(path.join(tempPath, "package", "ProjectData~"));
 
     spin.text = "Creating package json";
     const packageJsonFile = Bun.file(path.join(tempPath, "package", "package.json"));
@@ -129,15 +130,14 @@ export async function projectCommand(options: any): Promise<void> {
         });
 
     spin.text = "Archiving the template";
-    await $`mv ${path.join(tempPath, "package")} ${path.join(savedProjectTemplatesPath, "package")}`;
-    await $`tar caf ${path.join(
-        savedProjectTemplatesPath,
-        `com.unity.template.custom-${templateInfo.name}.tgz`
-    )} --directory ${savedProjectTemplatesPath} package`;
-    await rm(path.join(savedProjectTemplatesPath, "package"), {
-        recursive: true,
-        force: true,
-    });
+
+    const archiveName: string = `com.unity.template.custom-${templateInfo.name}.tgz`;
+    const archivePath: string = path.join(tempPath, archiveName);
+
+    // need to cd into savedProjectTemplatesPath because tar is weird and includes the full path
+    await $`cd ${tempPath} && tar czf ${archivePath} package`;
+
+    await rename(archivePath, path.join(savedProjectTemplatesPath, archiveName));
 
     await clearTemporary(spin);
     spin.succeed("Done! Open Unity Hub to see your new template");
