@@ -6,13 +6,13 @@ export type ScriptTemplate = {
 };
 
 export function getTemplateFromValue(value: string): ScriptTemplate {
-    return getTemplateFromFunction((template) => template.value === value, `Can't find template ${value}`);
+    return getTemplateFromFunction((template) => template.value === value, `Can't find template '${value}'`);
 }
 
 export function getTemplateFromShortName(value: string): ScriptTemplate {
     return getTemplateFromFunction(
         (template) => template.shortName === value,
-        `Can't find template ${value}`
+        `Can't find template '${value}'`
     );
 }
 
@@ -20,7 +20,8 @@ function getTemplateFromFunction(func: (template: ScriptTemplate) => boolean, er
     const templateIndex = scriptTemplates.findIndex(func);
 
     if (templateIndex == -1) {
-        throw new Error(errorMessage);
+        console.error(errorMessage);
+        process.exit(1);
     }
 
     return scriptTemplates[templateIndex];

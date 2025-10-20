@@ -283,7 +283,8 @@ async function getTemplateInfo(
 
             default: {
                 if (versionAction.search(semverRegex) === -1) {
-                    throw new Error(`Invalid semantic version ${versionAction}`);
+                    console.error(`Invalid semantic version ${versionAction}`);
+                    process.exit(1);
                 }
 
                 templateInfo.version = versionAction;
