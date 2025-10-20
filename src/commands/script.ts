@@ -3,7 +3,7 @@ import { getConfigFolder } from "../config";
 import ora from "ora";
 import { syncPrompt } from "./sync";
 import open from "open";
-import { getTemplateFromValue, scriptTemplates } from "../scriptTemplates";
+import { getTemplateFromShortName, getTemplateFromValue, scriptTemplates } from "../scriptTemplates";
 import { cleanupTemporary, EditorVersion, exists, formatPlural, makeTemporary } from "../misc";
 import path from "node:path";
 import { cp, readFile, writeFile } from "node:fs/promises";
@@ -17,17 +17,7 @@ export async function scriptCommand(options: any) {
         cleanupTemporary(options.silent);
     });
 
-    const choices: Choice<string>[] = scriptTemplates.map((template) => {
-        return {
-            label: template.displayName,
-            value: template.value,
-        };
-    });
-
-    const chosenTemplates: string[] = await multiselect("Select templates to edit", {
-        choices: choices,
-        validators: [required()],
-    });
+    const chosenTemplates: string[] = await getChosenTemplates();
 
     const tmpDir: string = await makeTemporary();
 
@@ -37,9 +27,13 @@ export async function scriptCommand(options: any) {
         const templatePath: string = path.join(tmpDir, formatScriptTemplateForHighlighting(template));
         const savedTemplateFile = path.join(savedScriptTemplatesPath, template);
 
+        if (i < options.fromFiles?.length) {
+            await cp(options.fromFiles[i], templatePath);
+            continue;
+        }
+
         if (!(await exists(savedTemplateFile))) {
             const templateText = getTemplateFromValue(template).defaultValue;
-
             await writeFile(templatePath, templateText);
         } else {
             const savedTemplateContents = await readFile(savedTemplateFile, { encoding: "utf8" });
@@ -98,6 +92,26 @@ export async function scriptCommand(options: any) {
 
         spinner.succeed(`Copied ${chosenTemplates.length} templates`);
     });
+
+    async function getChosenTemplates(): Promise<string[]> {
+        if (options.templates?.length > 0) {
+            return options.templates.map((template: string) => getTemplateFromShortName(template).value);
+        }
+
+        const choices: Choice<string>[] = scriptTemplates.map((template) => {
+            return {
+                label: template.displayName,
+                value: template.value,
+            };
+        });
+
+        const chosenTemplates: string[] = await multiselect("Select templates to edit", {
+            choices: choices,
+            validators: [required()],
+        });
+
+        return chosenTemplates;
+    }
 }
 
 export async function syncScripts(version: EditorVersion, silent: boolean) {

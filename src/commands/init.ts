@@ -35,6 +35,6 @@ export async function initCommand() {
         } else break;
     }
 
-    config.set("editorPath", editorPath);
-    config.set("projectsPath", projectsPath);
+    config.set("editorPath", path.resolve(editorPath));
+    config.set("projectsPath", path.resolve(projectsPath));
 }

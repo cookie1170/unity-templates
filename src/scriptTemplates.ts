@@ -1,14 +1,26 @@
 export type ScriptTemplate = {
     value: string;
+    shortName: string;
     displayName: string;
     defaultValue: string;
 };
 
 export function getTemplateFromValue(value: string): ScriptTemplate {
-    const templateIndex = scriptTemplates.findIndex((template) => template.value == value);
+    return getTemplateFromFunction((template) => template.value === value, `Can't find template ${value}`);
+}
+
+export function getTemplateFromShortName(value: string): ScriptTemplate {
+    return getTemplateFromFunction(
+        (template) => template.shortName === value,
+        `Can't find template ${value}`
+    );
+}
+
+function getTemplateFromFunction(func: (template: ScriptTemplate) => boolean, errorMessage: string) {
+    const templateIndex = scriptTemplates.findIndex(func);
 
     if (templateIndex == -1) {
-        throw new Error(`Can't find template ${value}`);
+        throw new Error(errorMessage);
     }
 
     return scriptTemplates[templateIndex];
@@ -17,6 +29,7 @@ export function getTemplateFromValue(value: string): ScriptTemplate {
 export const scriptTemplates: ScriptTemplate[] = [
     {
         value: "1-Scripting__MonoBehaviour Script-NewMonoBehaviourScript.cs.txt",
+        shortName: "mono-behaviour",
         displayName: "MonoBehaviour Script",
         defaultValue: `using UnityEngine;
 
@@ -40,6 +53,7 @@ public class #SCRIPTNAME# : MonoBehaviour
     },
     {
         value: "2-Scripting__ScriptableObject Script-NewScriptableObjectScript.cs.txt",
+        shortName: "scriptable-object",
         displayName: "ScriptableObject Script",
         defaultValue: `using UnityEngine;
 
@@ -55,6 +69,7 @@ public class #SCRIPTNAME# : ScriptableObject
 
     {
         value: "3-Scripting__MonoBehaviour Script-NewTestScript.cs.txt",
+        shortName: "test",
         displayName: "Test Script",
         defaultValue: `using System.Collections;
 using NUnit.Framework;
@@ -86,6 +101,7 @@ public class #SCRIPTNAME#
     },
     {
         value: "3-Scripting__Empty C# Script-NewEmptyCSharpScript.cs.txt",
+        shortName: "empty-csharp",
         displayName: "Empty C# Script",
         defaultValue: `using UnityEngine;
 
@@ -99,6 +115,7 @@ public class #SCRIPTNAME#
     },
     {
         value: "4-Shader__Compute Shader-NewComputeShader.compute.txt",
+        shortName: "compute",
         displayName: "Compute Shader",
         defaultValue: `// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSMain
@@ -118,6 +135,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     },
     {
         value: "1-Shader__Standard Surface Shader-NewSurfaceShader.shader.txt",
+        shortName: "surface",
         displayName: "Standard Surface Shader",
         defaultValue: `Shader "Custom/#NAME#"
 {
@@ -176,6 +194,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     },
     {
         value: "2-Shader__Unlit Shader-NewUnlitShader.shader.txt",
+        shortName: "unlit",
         displayName: "Unlit Shader",
         defaultValue: `Shader "Unlit/#NAME#"
 {
@@ -239,6 +258,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     },
     {
         value: "3-Shader__Image Effect Shader-NewImageEffectShader.shader.txt",
+        shortName: "image-effect",
         displayName: "Image Effect Shader",
         defaultValue: `Shader "Hidden/#NAME#"
 {
@@ -296,6 +316,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     },
     {
         value: "5-Shader__Ray Tracing Shader-NewRayTracingShader.raytrace.txt",
+        shortName: "ray-tracing",
         displayName: "Ray Tracing Shader",
         defaultValue: `RWTexture2D<float4> RenderTarget;
 
@@ -315,6 +336,7 @@ void MyRaygenShader()
     },
     {
         value: "6-Scripting__MonoBehaviour Script-NewStateMachineBehaviourScript.cs.txt",
+        shortName: "state-machine-behaviour",
         displayName: "State Machine Behaviour Script",
         defaultValue: `using UnityEngine;
 
@@ -356,6 +378,7 @@ public class #SCRIPTNAME# : StateMachineBehaviour
     },
     {
         value: "6-Scripting__MonoBehaviour Script-NewSubStateMachineBehaviourScript.cs.txt",
+        shortName: "sub-state-machine-behaviour",
         displayName: "Sub State Machine Behaviour Script",
         defaultValue: `using UnityEngine;
 
@@ -409,6 +432,7 @@ public class #SCRIPTNAME# : StateMachineBehaviour
     },
     {
         value: "20-Scripting__Assembly Definition-NewEditModeTestAssembly.asmdef.txt",
+        shortName: "edit-mode-test-assembly",
         displayName: "Edit Mode Test Assembly",
         defaultValue: `{
     "name": "#SCRIPTNAME#",
@@ -422,6 +446,7 @@ public class #SCRIPTNAME# : StateMachineBehaviour
     },
     {
         value: "21-Scripting__Assembly Definition-NewTestAssembly.asmdef.txt",
+        shortName: "test-assembly",
         displayName: "Test Assembly",
         defaultValue: `{
     "name": "#SCRIPTNAME#",
@@ -433,6 +458,7 @@ public class #SCRIPTNAME# : StateMachineBehaviour
     },
     {
         value: "22-Scripting__Assembly Definition-NewAssembly.asmdef.txt",
+        shortName: "asmdef",
         displayName: "Assembly Definition",
         defaultValue: `{
 	"name": "#SCRIPTNAME#"
@@ -441,6 +467,7 @@ public class #SCRIPTNAME# : StateMachineBehaviour
     },
     {
         value: "23-Scripting__Assembly Definition Reference-NewAssemblyReference.asmref.txt",
+        shortName: "asmref",
         displayName: "Assembly Definition Reference",
         defaultValue: `{
     "reference": ""
@@ -448,6 +475,7 @@ public class #SCRIPTNAME# : StateMachineBehaviour
     },
     {
         value: "103-Scene__Scene Template Pipeline-NewSceneTemplatePipeline.cs.txt",
+        shortName: "scene-template-pipeline",
         displayName: "Scene Template Pipeline",
         defaultValue: `using UnityEditor.SceneTemplate;
 using UnityEngine;
@@ -476,6 +504,7 @@ public class #SCRIPTNAME# : ISceneTemplatePipeline
     },
     {
         value: "1-Scripting__Playables__Playable Behaviour Script-NewPlayableBehaviour.cs.txt",
+        shortName: "playable-behaviour",
         displayName: "Playable Behaviour Script",
         defaultValue: `using UnityEngine;
 using UnityEngine.Playables;
@@ -519,6 +548,7 @@ public class #SCRIPTNAME# : PlayableBehaviour
     },
     {
         value: "2-Scripting__Playables__Playable Asset Script-NewPlayableAsset.cs.txt",
+        shortName: "playable-asset",
         displayName: "Playable Asset Script",
         defaultValue: `using UnityEngine;
 using UnityEngine.Playables;
