@@ -53,7 +53,7 @@ program
     )
     .option(
         "-t --templates <templates...>",
-        "automatically select the templates from a space separated list of templates, see README.md for templates\ninteractively edit them if no --from-files option passed"
+        "automatically select the templates from a space separated list of templates, see README.md for templates\ninteractively edit them if no --files option passed"
     )
     .action(getOptsAction(scriptCommand));
 

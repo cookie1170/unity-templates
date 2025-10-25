@@ -102,7 +102,7 @@ public class #SCRIPTNAME#
     },
     {
         value: "3-Scripting__Empty C# Script-NewEmptyCSharpScript.cs.txt",
-        shortName: "empty-csharp",
+        shortName: "empty",
         displayName: "Empty C# Script",
         defaultValue: `using UnityEngine;
 
