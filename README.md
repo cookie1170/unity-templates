@@ -94,7 +94,7 @@ This will also automatically get run if you try to use other commands without ha
 
 -   `--hub-only`: Only try to get the editor path using Unity hub. Exits with exit code one if Unity hub can't be launched
 
--   `--no-hub`: Don't try to launc Unity hub to get the editor path. Immediately prompts for the editor path
+-   `--no-hub`: Don't try to launch Unity hub to get the editor path. Immediately prompts for the editor path
 
 ## `unity-templates sync`
 
