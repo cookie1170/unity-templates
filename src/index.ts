@@ -26,7 +26,14 @@ program
 program
     .command("init")
     .description("initializes and interactively sets up the config file")
-    .action(initCommand);
+    .option("-p --projects-path <path>", "automatically set the projects path to avoid an interactive prompt")
+    .option(
+        "-e --editor-path <path>",
+        "automatically set the editor path to avoid launching Unity hub or an interactive prompt"
+    )
+    .option("--hub-only", "only try to get the editor path using Unity hub")
+    .option("-n --no-hub", "don't try to launch Unity hub to get the editor path")
+    .action(getOptsAction(initCommand));
 
 program
     .command("sync")

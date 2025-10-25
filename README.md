@@ -80,9 +80,21 @@ To initialize the config file, run
 unity-templates init
 ```
 
-This will interactively prompt you for your Unity editor path and the directory for your Unity projects (used by `unity-templates project`)
+This will interactively prompt you for the directory for your Unity projects (used by `unity-templates project`)
+
+Then, it will try to launch Unity hub and retrieve the editor path there. If that fails, it will interactively prompt you to input the path
 
 This will also automatically get run if you try to use other commands without having run this first
+
+### Options:
+
+-   `-p --projects-path <path>`: Automatically set the projects path to avoid an interactive prompt.
+
+-   `-e --editor-path <path>`: Automatically set the editor path to avoid launching Unity hub or an interactive prompt.
+
+-   `--hub-only`: Only try to get the editor path using Unity hub. Exits with exit code one if Unity hub can't be launched
+
+-   `--no-hub`: Don't try to launc Unity hub to get the editor path. Immediately prompts for the editor path
 
 ## `unity-templates sync`
 

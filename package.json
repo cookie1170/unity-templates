@@ -20,13 +20,13 @@
     ],
     "dependencies": {
         "@topcli/prompts": "^2.4.1",
-        "commander": "^14.0.1",
+        "commander": "^14.0.2",
         "conf": "^15.0.2",
         "exit-hook": "^5.0.0",
         "open": "^10.2.0",
         "ora": "^9.0.0",
         "tar": "^7.5.1",
-        "unity-helper": "0.3.0"
+        "unity-helper": "^0.4.2"
     },
     "devDependencies": {
         "@types/bun": "latest",
