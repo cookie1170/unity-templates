@@ -92,3 +92,9 @@ export async function readUnityProjects(
         return isValidUnityProject(projectPath);
     });
 }
+
+export function getOptsAction(
+    action: (opts: any) => void | Promise<void>
+): (_: any, command: any) => void | Promise<void> {
+    return (_, command: any) => action(command.optsWithGlobals());
+}

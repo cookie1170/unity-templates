@@ -11,17 +11,21 @@ import {
 } from "./commands/clear";
 import packageJson from "../package.json";
 import { openConfigCommand } from "./commands/openConfig";
+import { getOptsAction } from "./misc";
 
 export const program = new Command();
 
-program.name(packageJson.name).description(packageJson.description).version(packageJson.version);
+program
+    .name(packageJson.name)
+    .description(packageJson.description)
+    .version(packageJson.version)
+    .option("-S --silent", "don't output any text (except for interactive prompts, if any)");
 
 program
     .command("sync")
     .description("syncs the templates that Unity uses with the custom saved templates")
-    .option("-S --silent", "don't output any text (except for interactive prompts, if any)")
     .option("-a --all", "sync for all editor versions without asking")
-    .action(syncCommand);
+    .action(getOptsAction(syncCommand));
 
 program
     .command("project")
@@ -36,8 +40,7 @@ program
     )
     .option("-s --sync", "automatically accept the sync prompt")
     .option("--no-sync", "automatically decline the sync prompt")
-    .option("-S --silent", "don't output any text (except for interactive prompts, if any)")
-    .action(projectCommand);
+    .action(getOptsAction(projectCommand));
 
 program
     .command("script")
@@ -52,13 +55,11 @@ program
     )
     .option("-s --sync", "automatically accept the sync prompt")
     .option("--no-sync", "automatically decline the sync prompt")
-    .option("-S --silent", "don't output any text (except for interactive prompts, if any)")
-    .action(scriptCommand);
+    .action(getOptsAction(scriptCommand));
 
 program
     .command("init")
     .description("initializes and interactively sets up the config file")
-    .option("-S --silent", "don't output any text (except for interactive prompts, if any)")
     .action(initCommand);
 
 program
@@ -71,7 +72,7 @@ program
             "script",
         ])
     )
-    .action(openConfigCommand);
+    .action(getOptsAction(openConfigCommand));
 
 const clear = program
     .command("clear <command>")
@@ -85,8 +86,7 @@ clear
     .description("clears all of unity-templates's saved files")
     .option("-s --sync", "automatically accept the sync prompt")
     .option("--no-sync", "automatically decline the sync prompt")
-    .option("-S --silent", "don't output any text (except for interactive prompts, if any)")
-    .action(clearAllCommand);
+    .action(getOptsAction(clearAllCommand));
 
 clear.command("config").description("clears the config file").action(clearConfigCommand);
 
@@ -95,17 +95,15 @@ clear
     .option("-a --all", "clears all saved script templates instead of a selection")
     .option("-s --sync", "automatically accept the sync prompt")
     .option("--no-sync", "automatically decline the sync prompt")
-    .option("-S --silent", "don't output any text (except for interactive prompts, if any)")
     .description("clears saved script templates")
-    .action(clearScriptTemplatesCommand);
+    .action(getOptsAction(clearScriptTemplatesCommand));
 
 clear
     .command("project")
     .option("-a --all", "clears all saved project templates instead of a selection")
     .option("-s --sync", "automatically accept the sync prompt")
     .option("--no-sync", "automatically decline the sync prompt")
-    .option("-S --silent", "don't output any text (except for interactive prompts, if any)")
     .description("clears saved project templates")
-    .action(clearProjectTemplatesCommand);
+    .action(getOptsAction(clearProjectTemplatesCommand));
 
-program.parse();
+await program.parseAsync();
