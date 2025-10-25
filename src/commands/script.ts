@@ -28,8 +28,8 @@ export async function scriptCommand(options: any) {
         const templatePath: string = path.join(tmpDir, formatScriptTemplateForHighlighting(template));
         const savedTemplateFile = path.join(savedScriptTemplatesPath, template);
 
-        if (i < options.fromFiles?.length) {
-            await cp(options.fromFiles[i], templatePath);
+        if (i < options.files?.length) {
+            await cp(options.files[i], templatePath);
             continue;
         }
 

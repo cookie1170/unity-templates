@@ -48,7 +48,7 @@ program
     .command("script")
     .description("create or edit overrides for Unity script templates")
     .option(
-        "-f --from-files <files...>",
+        "-f --files <files...>",
         "create the script templates from a space separated list of files\ninteractively select templates if no --templates option passed"
     )
     .option(
