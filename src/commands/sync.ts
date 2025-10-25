@@ -41,6 +41,6 @@ export async function syncPrompt(
 
     async function trySync(didAccept: boolean) {
         if (beforeSync !== undefined) await beforeSync(didAccept);
-        if (didAccept) await syncCommand({ silent: silent });
+        if (didAccept) await syncCommand({ silent: silent, all: true });
     }
 }

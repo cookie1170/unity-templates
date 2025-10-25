@@ -19,7 +19,14 @@ program
     .name(packageJson.name)
     .description(packageJson.description)
     .version(packageJson.version)
-    .option("-S --silent", "don't output any text (except for interactive prompts, if any)");
+    .option("-S --silent", "don't output any text (except for interactive prompts, if any)")
+    .option("-s --sync", "automatically accept the sync prompt")
+    .option("--no-sync", "automatically decline the sync prompt");
+
+program
+    .command("init")
+    .description("initializes and interactively sets up the config file")
+    .action(initCommand);
 
 program
     .command("sync")
@@ -38,8 +45,6 @@ program
         "-v --version-action <action>",
         'specify a version action. Use "nothing", "patch", "minor" or "major" or pass a semantic version'
     )
-    .option("-s --sync", "automatically accept the sync prompt")
-    .option("--no-sync", "automatically decline the sync prompt")
     .action(getOptsAction(projectCommand));
 
 program
@@ -53,14 +58,7 @@ program
         "-t --templates <templates...>",
         "automatically select the templates from a space separated list of templates, see README.md for templates\ninteractively edit them if no --from-files option passed"
     )
-    .option("-s --sync", "automatically accept the sync prompt")
-    .option("--no-sync", "automatically decline the sync prompt")
     .action(getOptsAction(scriptCommand));
-
-program
-    .command("init")
-    .description("initializes and interactively sets up the config file")
-    .action(initCommand);
 
 program
     .command("open-config")
@@ -75,7 +73,7 @@ program
     .action(getOptsAction(openConfigCommand));
 
 const clear = program
-    .command("clear <command>")
+    .command("clear")
     .summary("used to clear unity-templates's saved files. See unity-templates clear --help")
     .description(
         "Used to clear unity-templates's saved files, such as script or project templates and config."
@@ -84,8 +82,6 @@ const clear = program
 clear
     .command("all")
     .description("clears all of unity-templates's saved files")
-    .option("-s --sync", "automatically accept the sync prompt")
-    .option("--no-sync", "automatically decline the sync prompt")
     .action(getOptsAction(clearAllCommand));
 
 clear.command("config").description("clears the config file").action(clearConfigCommand);
@@ -93,16 +89,12 @@ clear.command("config").description("clears the config file").action(clearConfig
 clear
     .command("script")
     .option("-a --all", "clears all saved script templates instead of a selection")
-    .option("-s --sync", "automatically accept the sync prompt")
-    .option("--no-sync", "automatically decline the sync prompt")
     .description("clears saved script templates")
     .action(getOptsAction(clearScriptTemplatesCommand));
 
 clear
     .command("project")
     .option("-a --all", "clears all saved project templates instead of a selection")
-    .option("-s --sync", "automatically accept the sync prompt")
-    .option("--no-sync", "automatically decline the sync prompt")
     .description("clears saved project templates")
     .action(getOptsAction(clearProjectTemplatesCommand));
 

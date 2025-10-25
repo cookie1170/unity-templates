@@ -199,14 +199,18 @@ async function getTemplateInfo(
     silent: boolean
 ): Promise<ProjectTemplateInfo> {
     const templateInfoPath = path.join(selectedProject, "template-info.json");
+    let didCreate: boolean = false;
 
     if (!(await exists(templateInfoPath))) {
         await writeFile(templateInfoPath, await createTemplateInfo());
+        didCreate = true;
     }
 
     const templateInfo: ProjectTemplateInfo = JSON.parse(
         await readFile(templateInfoPath, { encoding: "utf8" })
     );
+
+    if (didCreate) return templateInfo;
 
     const semanticVersion: string[] = templateInfo.version.split(".");
 
