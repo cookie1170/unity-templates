@@ -3,9 +3,6 @@ import { confirm } from "@topcli/prompts";
 import { initCommand } from "./commands/init";
 
 const schema = {
-    editorPath: {
-        type: "string",
-    },
     projectsPath: {
         type: "string",
     },

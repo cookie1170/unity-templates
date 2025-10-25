@@ -6,16 +6,15 @@ import { syncPrompt } from "./sync";
 import { getConfig, getConfigFolder } from "../config";
 import {
     cleanupTemporary,
-    EditorVersion,
     exists,
     formatPlural,
-    isValidUnityProject,
     makeOrReaddir,
     makeTemporary,
     readUnityProjects,
 } from "../misc";
 import path from "node:path";
 import exitHook from "exit-hook";
+import { isValidUnityProject, EditorVersion } from "unity-helper";
 
 const semverRegex =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm;
@@ -51,7 +50,7 @@ export async function projectCommand(options: any): Promise<void> {
         project = path.join(await getConfig("projectsPath"), selectedProject);
     } else project = options.project.replace("@projects", await getConfig("projectsPath"));
 
-    if (!(await isValidUnityProject(project))) {
+    if (!isValidUnityProject(project)) {
         ora({ isSilent: options.silent }).fail("Invalid Unity project");
         process.exit(1);
     }

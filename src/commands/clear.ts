@@ -8,6 +8,7 @@ import { Choice, multiselect, required } from "@topcli/prompts";
 import { syncPrompt } from "./sync";
 import { getTemplateFromValue } from "../scriptTemplates";
 import path from "node:path";
+import { getEditorPathOrUndefined } from "unity-helper";
 
 export async function clearAllCommand(options: any) {
     const spinner = ora({ text: "Clearing all config", isSilent: options.silent });
@@ -21,7 +22,7 @@ export async function clearAllCommand(options: any) {
     await clearScriptTemplatesCommand({ all: true, sync: false });
     await clearProjectTemplatesCommand({ all: true, sync: false });
 
-    if (config.get("editorPath", undefined) !== undefined) await syncPrompt(options.sync, options.silent);
+    if (getEditorPathOrUndefined !== undefined) await syncPrompt(options.sync, options.silent);
     clearConfigCommand();
 }
 

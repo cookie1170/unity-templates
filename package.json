@@ -11,7 +11,7 @@
     "scripts": {
         "dev": "bun run src/index.ts",
         "build": "rm -f ./dist/index.js && touch ./dist/index.js && echo \"#!/usr/bin/env node\" >> ./dist/index.js && bun build --target node --entrypoints ./src/index.ts --production >> ./dist/index.js",
-        "publish": "bun run build && bun publish"
+        "publish": "bun run build && bun publish -p --otp $1"
     },
     "files": [
         "dist"
@@ -23,13 +23,14 @@
         "exit-hook": "^5.0.0",
         "open": "^10.2.0",
         "ora": "^9.0.0",
-        "tar": "^7.5.1"
+        "tar": "^7.5.1",
+        "unity-helper": "0.3.0"
     },
     "devDependencies": {
         "@types/bun": "latest",
-        "@types/node": "^18.19.129",
+        "@types/node": "^18.19.130",
         "@types/prompts": "^2.4.9",
         "ts-node": "^10.9.2",
-        "typescript": "^5.0.0"
+        "typescript": "^5.9.3"
     }
 }

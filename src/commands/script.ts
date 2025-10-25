@@ -4,10 +4,11 @@ import ora from "ora";
 import { syncPrompt } from "./sync";
 import open from "open";
 import { getTemplateFromShortName, getTemplateFromValue, scriptTemplates } from "../scriptTemplates";
-import { cleanupTemporary, EditorVersion, exists, formatPlural, makeTemporary } from "../misc";
+import { cleanupTemporary, exists, formatPlural, makeTemporary } from "../misc";
 import path from "node:path";
 import { cp, readFile, writeFile } from "node:fs/promises";
 import exitHook from "exit-hook";
+import { EditorVersion } from "unity-helper";
 
 export const savedScriptTemplatesPath: string = path.join(getConfigFolder(), "script-templates");
 const editorScriptTemplatesPath: string = path.join("Editor", "Data", "Resources", "ScriptTemplates");
