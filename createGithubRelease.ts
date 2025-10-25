@@ -70,12 +70,15 @@ const version = packageJson.version;
 const tag = `v${version}`;
 
 if (!program.opts().dryRun) {
+    spin.text = `Pushing tags`;
+    await $`git push --tags`.quiet();
+
     spin.text = `Creating github release for tag ${tag}`;
     await $`gh release create ${tag} --generate-notes`.quiet();
 
     for (const platform of succeededPlatforms) {
         spin.text = `Uploading binary for ${platform.name}`;
-        await $`gh release upload ${tag} ./bin/unity-templates-${platform.name}${platform.targetFileExtension}`;
+        await $`gh release upload ${tag} ./bin/unity-templates-${platform.name}${platform.targetFileExtension}`.quiet();
     }
 }
 
