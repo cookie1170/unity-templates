@@ -15,6 +15,7 @@
         "postpublish": "bun run createGithubRelease.ts"
     },
     "files": [
+        "README.md",
         "dist"
     ],
     "dependencies": {

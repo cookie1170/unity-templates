@@ -30,13 +30,13 @@ const buildPlatforms: BuildPlatform[] = [
         bunName: "bun-darwin-x64",
         name: "macos-x64",
         srcFileExtension: "",
-        targetFileExtension: ".app",
+        targetFileExtension: "",
     },
     {
         bunName: "bun-darwin-arm64",
         name: "macos-arm64",
         srcFileExtension: "",
-        targetFileExtension: ".app",
+        targetFileExtension: "",
     },
 ];
 
