@@ -1,4 +1,4 @@
-import { $ } from "bun";
+import { $, Target } from "bun";
 import { rename, rm } from "node:fs/promises";
 import packageJson from "./package.json";
 import ora from "ora";
@@ -52,7 +52,7 @@ for (const platform of buildPlatforms) {
             compile: true,
             entrypoints: ["./src/index.ts"],
             outdir: "./bin",
-            target: platform.bunName,
+            target: platform.bunName as Target,
         });
 
         await rename(
@@ -70,6 +70,9 @@ const version = packageJson.version;
 const tag = `v${version}`;
 
 if (!program.opts().dryRun) {
+    spin.text = `Pushing to git`;
+    await $`git push`.quiet();
+
     spin.text = `Pushing tags`;
     await $`git push --tags`.quiet();
 
@@ -83,6 +86,7 @@ if (!program.opts().dryRun) {
 }
 
 spin.succeed(`Created release for tag ${tag} with ${succeededPlatforms.length} binaries`);
+await $`notify-send -a "Unity templates" "Finished" "Finished uploading release ${tag} to GitHub"`.nothrow();
 
 type BuildPlatform = {
     bunName: string;
