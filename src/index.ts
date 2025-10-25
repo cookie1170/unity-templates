@@ -20,6 +20,7 @@ program
     .command("sync")
     .description("syncs the templates that Unity uses with the custom saved templates")
     .option("-S --silent", "don't output any text (except for interactive prompts, if any)")
+    .option("-a --all", "sync for all editor versions without asking")
     .action(syncCommand);
 
 program

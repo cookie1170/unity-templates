@@ -9,16 +9,17 @@ export async function syncCommand(options: any) {
     const editorPath: string = await getEditorPath();
 
     const versionChoices: string[] = versions.map((version) => version.version);
-    const selectedVersions: EditorVersion[] = (
-        versions.length <= 1
-            ? versionChoices
-            : await multiselect("Select versions to sync", {
-                  choices: versionChoices,
-                  preSelectedChoices: versionChoices,
-              })
-    ).map((version) => {
-        return { version: version, path: path.join(editorPath, version) };
-    });
+    const selectedVersions: EditorVersion[] = options.all
+        ? versions
+        : (versions.length <= 1
+              ? versionChoices
+              : await multiselect("Select versions to sync", {
+                    choices: versionChoices,
+                    preSelectedChoices: versionChoices,
+                })
+          ).map((version) => {
+              return { version: version, path: path.join(editorPath, version) };
+          });
 
     for (const version of selectedVersions) {
         await syncProjects(version, options.silent);
