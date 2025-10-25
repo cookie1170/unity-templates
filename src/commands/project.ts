@@ -48,7 +48,7 @@ export async function projectCommand(options: any): Promise<void> {
         });
 
         project = path.join(await getConfig("projectsPath"), selectedProject);
-    } else project = options.project.replace("@projects", await getConfig("projectsPath"));
+    } else project = options.project;
 
     if (!isValidUnityProject(project)) {
         ora({ isSilent: options.silent }).fail("Invalid Unity project");

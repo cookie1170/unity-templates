@@ -37,12 +37,9 @@ program
 program
     .command("project")
     .description("make or update a template from a Unity project")
+    .option("-p --project <project>", "specify a project path to use")
     .option(
-        "-p --project <project>",
-        "specify a project path to use. Use @projects to access the project dir in the config"
-    )
-    .option(
-        "-v --version-action <action>",
+        "-a --version-action <action>",
         'specify a version action. Use "nothing", "patch", "minor" or "major" or pass a semantic version'
     )
     .action(getOptsAction(projectCommand));
