@@ -11,7 +11,8 @@
     "scripts": {
         "dev": "bun run src/index.ts",
         "build": "rm -f ./dist/index.js && touch ./dist/index.js && echo \"#!/usr/bin/env node\" >> ./dist/index.js && bun build --packages external --target node --entrypoints ./src/index.ts --production >> ./dist/index.js",
-        "prepack": "bun run build"
+        "prepack": "bun run build",
+        "postpublish": "bun run createGithubRelease.ts"
     },
     "files": [
         "dist"
