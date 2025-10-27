@@ -13,7 +13,7 @@ import packageJson from "../package.json";
 import { openConfigCommand } from "./commands/openConfig";
 import { getOptsAction } from "./misc";
 
-export const program = new Command();
+const program = new Command();
 
 program
     .name(packageJson.name)
