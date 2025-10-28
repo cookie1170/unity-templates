@@ -22,7 +22,7 @@ export async function clearAllCommand(options: any) {
     await clearScriptTemplatesCommand({ all: true, sync: false });
     await clearProjectTemplatesCommand({ all: true, sync: false });
 
-    if (getEditorPathOrUndefined !== undefined) await syncPrompt(options.sync, options.silent);
+    if (getEditorPathOrUndefined() !== undefined) await syncPrompt(options.sync, options.silent);
     clearConfigCommand();
 }
 
