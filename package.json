@@ -12,7 +12,7 @@
         "dev": "bun run src/index.ts",
         "build": "mkdir ./dist -p && rm -f ./dist/index.js && touch ./dist/index.js && echo \"#!/usr/bin/env node\" >> ./dist/index.js && bun build --packages external --target node --entrypoints ./src/index.ts --production >> ./dist/index.js",
         "prepack": "bun run build",
-        "postpublish": "bun run createGithubRelease.ts"
+        "postpublish": "bun run dev/publish.js"
     },
     "files": [
         "README.md",
