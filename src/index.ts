@@ -102,4 +102,4 @@ clear
     .description("clears saved project templates")
     .action(getOptsAction(clearProjectTemplatesCommand));
 
-await program.parseAsync();
+program.parse();
